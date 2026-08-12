@@ -1,37 +1,33 @@
+import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 
-import { ProductCard, ProductCardData } from '@/components/product-card';
+import { BlogCard } from '@/components/blog-card';
 import { SearchFilterBar, SortOption } from '@/components/search-filter-bar';
 import { EkoColors, EkoFonts } from '@/constants/eko-theme';
-import { fetchWebflowProducts } from '@/lib/webflow-products';
+import { BlogCardData, fetchWebflowBlogs } from '@/lib/webflow-blogs';
 
 const SORT_OPTIONS: SortOption[] = [
+  { value: 'date-desc', label: 'Nieuwste' },
+  { value: 'date-asc', label: 'Oudste' },
   { value: 'name-asc', label: 'Naam A-Z' },
   { value: 'name-desc', label: 'Naam Z-A' },
-  { value: 'price-asc', label: 'Prijs laag-hoog' },
-  { value: 'price-desc', label: 'Prijs hoog-laag' },
 ];
 
-const PRICE_BUCKETS = [
-  { id: 'under-50', label: '< €50', test: (p?: number) => typeof p === 'number' && p < 50 },
-  { id: '50-100', label: '€50–100', test: (p?: number) => typeof p === 'number' && p >= 50 && p <= 100 },
-  { id: 'over-100', label: '> €100', test: (p?: number) => typeof p === 'number' && p > 100 },
-];
-
-export default function ShopScreen() {
-  const [products, setProducts] = useState<ProductCardData[]>([]);
+export default function BlogScreen() {
+  const router = useRouter();
+  const [blogs, setBlogs] = useState<BlogCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState('');
-  const [priceBucket, setPriceBucket] = useState<string | null>(null);
-  const [sort, setSort] = useState('name-asc');
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [sort, setSort] = useState('date-desc');
 
   useEffect(() => {
-    fetchWebflowProducts()
+    fetchWebflowBlogs()
       .then((items) => {
-        setProducts(items.map((item) => item.card));
+        setBlogs(items);
         setLoading(false);
       })
       .catch((err) => {
@@ -40,36 +36,45 @@ export default function ShopScreen() {
       });
   }, []);
 
-  const visibleProducts = useMemo(() => {
-    let result = products;
+  const categories = useMemo(() => {
+    const map = new Map<string, string>();
+    blogs.forEach((b) => {
+      if (b.categoryId && b.categoryName) map.set(b.categoryId, b.categoryName);
+    });
+    return Array.from(map.entries()).map(([id, label]) => ({ id, label }));
+  }, [blogs]);
+
+  const visibleBlogs = useMemo(() => {
+    let result = blogs;
 
     if (search.trim()) {
       const q = search.trim().toLowerCase();
-      result = result.filter((p) => p.name.toLowerCase().includes(q));
+      result = result.filter(
+        (b) => b.name.toLowerCase().includes(q) || b.summary?.toLowerCase().includes(q)
+      );
     }
 
-    if (priceBucket) {
-      const bucket = PRICE_BUCKETS.find((b) => b.id === priceBucket);
-      if (bucket) result = result.filter((p) => bucket.test(p.priceEuro));
+    if (categoryId) {
+      result = result.filter((b) => b.categoryId === categoryId);
     }
 
     const sorted = [...result];
     switch (sort) {
+      case 'date-asc':
+        sorted.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+        break;
+      case 'date-desc':
+        sorted.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        break;
       case 'name-asc':
         sorted.sort((a, b) => a.name.localeCompare(b.name));
         break;
       case 'name-desc':
         sorted.sort((a, b) => b.name.localeCompare(a.name));
         break;
-      case 'price-asc':
-        sorted.sort((a, b) => (a.priceEuro ?? 0) - (b.priceEuro ?? 0));
-        break;
-      case 'price-desc':
-        sorted.sort((a, b) => (b.priceEuro ?? 0) - (a.priceEuro ?? 0));
-        break;
     }
     return sorted;
-  }, [products, search, priceBucket, sort]);
+  }, [blogs, search, categoryId, sort]);
 
   if (loading) {
     return (
@@ -89,27 +94,27 @@ export default function ShopScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Onze collectie</Text>
+      <Text style={styles.title}>Verhalen &amp; nieuws</Text>
       <SearchFilterBar
         searchValue={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Zoek een product..."
-        categories={PRICE_BUCKETS.map(({ id, label }) => ({ id, label }))}
-        selectedCategoryId={priceBucket}
-        onSelectCategory={setPriceBucket}
+        searchPlaceholder="Zoek een blogpost..."
+        categories={categories}
+        selectedCategoryId={categoryId}
+        onSelectCategory={setCategoryId}
         sortOptions={SORT_OPTIONS}
         selectedSort={sort}
         onSelectSort={setSort}
       />
       <FlatList
-        data={visibleProducts}
+        data={visibleBlogs}
         keyExtractor={(item) => item.id}
-        numColumns={2}
-        columnWrapperStyle={{ gap: 16 }}
-        ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
-        renderItem={({ item }) => <ProductCard product={item} />}
+        ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
+        renderItem={({ item }) => (
+          <BlogCard blog={item} onPress={() => router.push(`/blog/${item.slug}`)} />
+        )}
         contentContainerStyle={{ paddingBottom: 40 }}
-        ListEmptyComponent={<Text style={styles.body}>Geen producten gevonden.</Text>}
+        ListEmptyComponent={<Text style={styles.body}>Geen blogposts gevonden.</Text>}
       />
     </View>
   );
