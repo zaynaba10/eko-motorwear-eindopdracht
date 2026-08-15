@@ -18,6 +18,7 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'bag.fill': 'shopping-bag',
   'newspaper.fill': 'article',
+  'person.fill': 'person',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
   'chevron.left': 'chevron-left',
