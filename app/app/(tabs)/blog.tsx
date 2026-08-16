@@ -111,7 +111,7 @@ export default function BlogScreen() {
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
         renderItem={({ item }) => (
-          <BlogCard blog={item} onPress={() => router.push(`/blog/${item.slug}`)} />
+          <BlogCard blog={item} onPress={() => router.push(`/blog/${item.id}`)} />
         )}
         contentContainerStyle={{ paddingBottom: 40 }}
         ListEmptyComponent={<Text style={styles.body}>Geen blogposts gevonden.</Text>}

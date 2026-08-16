@@ -1,10 +1,15 @@
+import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { ProductCard, ProductCardData } from '@/components/product-card';
 import { SearchFilterBar, SortOption } from '@/components/search-filter-bar';
 import { EkoColors, EkoFonts } from '@/constants/eko-theme';
-import { fetchWebflowProducts } from '@/lib/webflow-products';
+import {
+  fetchProductCategories,
+  fetchWebflowProducts,
+  ProductCategory,
+} from '@/lib/webflow-products';
 
 const SORT_OPTIONS: SortOption[] = [
   { value: 'name-asc', label: 'Naam A-Z' },
@@ -20,18 +25,25 @@ const PRICE_BUCKETS = [
 ];
 
 export default function ShopScreen() {
+  const router = useRouter();
+
   const [products, setProducts] = useState<ProductCardData[]>([]);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState('');
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [priceBucket, setPriceBucket] = useState<string | null>(null);
   const [sort, setSort] = useState('name-asc');
 
   useEffect(() => {
-    fetchWebflowProducts()
-      .then((items) => {
+    // Producten en categorieën tegelijk ophalen — de categoriechips zijn
+    // dezelfde als op de website (Nieuw, Laarzen, Handschoenen, ...).
+    Promise.all([fetchWebflowProducts(), fetchProductCategories()])
+      .then(([items, cats]) => {
         setProducts(items.map((item) => item.card));
+        setCategories(cats);
         setLoading(false);
       })
       .catch((err) => {
@@ -46,6 +58,12 @@ export default function ShopScreen() {
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       result = result.filter((p) => p.name.toLowerCase().includes(q));
+    }
+
+    // Categoriefilter: elk product draagt zijn categorie-ID's mee in
+    // fieldData.category; we tonen alleen producten die de gekozen ID bevatten.
+    if (categoryId) {
+      result = result.filter((p) => (p.categoryIds || []).includes(categoryId));
     }
 
     if (priceBucket) {
@@ -69,7 +87,7 @@ export default function ShopScreen() {
         break;
     }
     return sorted;
-  }, [products, search, priceBucket, sort]);
+  }, [products, search, categoryId, priceBucket, sort]);
 
   if (loading) {
     return (
@@ -94,9 +112,12 @@ export default function ShopScreen() {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="Zoek een product..."
-        categories={PRICE_BUCKETS.map(({ id, label }) => ({ id, label }))}
-        selectedCategoryId={priceBucket}
-        onSelectCategory={setPriceBucket}
+        categories={categories.map((c) => ({ id: c.id, label: c.name }))}
+        selectedCategoryId={categoryId}
+        onSelectCategory={setCategoryId}
+        extraFilters={PRICE_BUCKETS.map(({ id, label }) => ({ id, label }))}
+        selectedExtraId={priceBucket}
+        onSelectExtra={setPriceBucket}
         sortOptions={SORT_OPTIONS}
         selectedSort={sort}
         onSelectSort={setSort}
@@ -107,7 +128,9 @@ export default function ShopScreen() {
         numColumns={2}
         columnWrapperStyle={{ gap: 16 }}
         ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
-        renderItem={({ item }) => <ProductCard product={item} />}
+        renderItem={({ item }) => (
+          <ProductCard product={item} onPress={() => router.push(`/product/${item.id}`)} />
+        )}
         contentContainerStyle={{ paddingBottom: 40 }}
         ListEmptyComponent={<Text style={styles.body}>Geen producten gevonden.</Text>}
       />

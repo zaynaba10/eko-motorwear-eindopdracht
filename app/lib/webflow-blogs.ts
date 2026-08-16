@@ -30,6 +30,7 @@ type WebflowBlogItem = {
     'alt-text'?: string;
     'author-image'?: WebflowImage;
     'author-name'?: string;
+    'publish-date'?: string;
   };
 };
 
@@ -71,6 +72,27 @@ async function webflowGet(path: string) {
   return res.json();
 }
 
+function mapBlogItem(item: WebflowBlogItem, categoryMap: Map<string, string>): BlogDetails {
+  const fd = item.fieldData;
+  const image = fd['main-image-2'] || fd['thumbnail-image'];
+
+  return {
+    id: item.id,
+    slug: fd.slug,
+    name: fd.name,
+    summary: fd['post-summary'],
+    imageUrl: image?.url,
+    altText: fd['alt-text'] || image?.alt || undefined,
+    authorName: fd['author-name'],
+    authorImageUrl: fd['author-image']?.url,
+    categoryId: fd.category,
+    categoryName: fd.category ? categoryMap.get(fd.category) : undefined,
+    date: fd['publish-date'] || item.lastPublished || item.createdOn,
+    featured: fd.featured,
+    bodyHtml: fd['rich-text'],
+  };
+}
+
 /** Haalt alle blog-categorieën op (Aankondigingen, Reisverslagen, Evenementen). */
 export async function fetchWebflowBlogCategories(): Promise<BlogCategory[]> {
   const data = await webflowGet(`/collections/${BLOG_CATEGORIES_COLLECTION_ID}/items`);
@@ -92,30 +114,20 @@ export async function fetchWebflowBlogs(): Promise<BlogDetails[]> {
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
   const items: WebflowBlogItem[] = blogData.items || [];
 
-  return items.map((item) => {
-    const fd = item.fieldData;
-    const image = fd['main-image-2'] || fd['thumbnail-image'];
-
-    return {
-      id: item.id,
-      slug: fd.slug,
-      name: fd.name,
-      summary: fd['post-summary'],
-      imageUrl: image?.url,
-      altText: fd['alt-text'] || image?.alt || undefined,
-      authorName: fd['author-name'],
-      authorImageUrl: fd['author-image']?.url,
-      categoryId: fd.category,
-      categoryName: fd.category ? categoryMap.get(fd.category) : undefined,
-      date: item.lastPublished || item.createdOn,
-      featured: fd.featured,
-      bodyHtml: fd['rich-text'],
-    };
-  });
+  return items.map((item) => mapBlogItem(item, categoryMap));
 }
 
-/** Zoekt één blog op basis van de slug (voor BlogDetailsScreen). */
-export async function fetchWebflowBlogBySlug(slug: string): Promise<BlogDetails | undefined> {
-  const blogs = await fetchWebflowBlogs();
-  return blogs.find((b) => b.slug === slug);
+/**
+ * Haalt één blog op via zijn ID — het "endpoint per blog (via ID)" uit de
+ * opdracht. Wordt gebruikt door het BlogDetailsScreen: de kaart stuurt alleen
+ * de ID mee via de route, dit is de aparte API-call voor dat ene item.
+ */
+export async function fetchWebflowBlog(blogId: string): Promise<BlogDetails> {
+  const [item, categories] = await Promise.all([
+    webflowGet(`/collections/${BLOGS_COLLECTION_ID}/items/${blogId}`) as Promise<WebflowBlogItem>,
+    fetchWebflowBlogCategories(),
+  ]);
+
+  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
+  return mapBlogItem(item, categoryMap);
 }

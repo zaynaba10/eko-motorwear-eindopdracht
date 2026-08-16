@@ -4,52 +4,57 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { EkoColors, EkoFonts } from '@/constants/eko-theme';
-import { BlogDetails, fetchWebflowBlogs } from '@/lib/webflow-blogs';
+import { BlogDetails, fetchWebflowBlog } from '@/lib/webflow-blogs';
 import { parseRichText } from '@/lib/rich-text';
 
 /**
- * BlogDetailsScreen — dynamische route (app/blog/[slug].tsx), bereikt vanuit
- * het Blog-overzicht via router.push(`/blog/${slug}`). Haalt alle blogs op
- * en zoekt de juiste via de slug-param, zodat ook Next/Previous Post-links
- * meteen beschikbaar zijn zonder extra API-calls.
+ * BlogDetailsScreen — dynamische route (app/blog/[id].tsx), bereikt vanuit
+ * het Blog-overzicht via router.push(`/blog/${id}`). De ID komt binnen via
+ * de route-params en de blog wordt hier opgehaald via het "endpoint per blog
+ * (via ID)" uit de opdracht — één API-call voor precies dit item.
  */
 export default function BlogDetailsScreen() {
-  const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
 
-  const [blogs, setBlogs] = useState<BlogDetails[]>([]);
+  const [blog, setBlog] = useState<BlogDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchWebflowBlogs()
-      .then((items) => {
-        setBlogs(items);
+    if (!id) return;
+    fetchWebflowBlog(id)
+      .then((item) => {
+        setBlog(item);
         setLoading(false);
       })
       .catch((err) => {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
-
-  const blog = blogs.find((b) => b.slug === slug);
+  }, [id]);
 
   if (loading) {
-    return (
+  return (
+    <>
+      <Stack.Screen options={{ title: 'Blog', headerBackTitle: 'Blog' }} />
       <View style={styles.center}>
         <ActivityIndicator size="large" color={EkoColors.primary} />
       </View>
-    );
-  }
+    </>
+  );
+}
 
   if (error || !blog) {
-    return (
+  return (
+    <>
+      <Stack.Screen options={{ title: 'Blog', headerBackTitle: 'Blog' }} />
       <View style={styles.center}>
         <Text style={styles.errorText}>{error ? `Fout: ${error}` : 'Blogpost niet gevonden.'}</Text>
       </View>
-    );
-  }
+    </>
+  );
+}
 
   const blocks = parseRichText(blog.bodyHtml);
   const date = blog.date
@@ -95,11 +100,9 @@ export default function BlogDetailsScreen() {
           })}
 
           <View style={styles.navRow}>
-            {blog.categoryId && (
-              <TouchableOpacity onPress={() => router.push('/(tabs)/blog')}>
-                <Text style={styles.navLink}>← Terug naar overzicht</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity onPress={() => router.push('/(tabs)/blog')}>
+              <Text style={styles.navLink}>← Terug naar overzicht</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>

@@ -3,12 +3,15 @@ import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { EkoColors, EkoFonts, EkoRadius } from '@/constants/eko-theme';
+import { euro } from '@/lib/format';
 
 export type ProductCardData = {
   id: string;
   name: string;
   imageUrl?: string;
   priceEuro?: number;
+  /** Categorie-ID's van dit product, voor de categoriefilter. */
+  categoryIds?: string[];
 };
 
 type ProductCardProps = {
@@ -33,7 +36,7 @@ export function ProductCard({ product, onPress, width }: ProductCardProps) {
         {product.name}
       </Text>
       {typeof product.priceEuro === 'number' && (
-        <Text style={styles.price}>€ {product.priceEuro.toFixed(2)}</Text>
+        <Text style={styles.price}>{euro(product.priceEuro)}</Text>
       )}
     </Pressable>
   );

@@ -13,6 +13,14 @@ type SearchFilterBarProps = {
   categories?: FilterOption[];
   selectedCategoryId?: string | null;
   onSelectCategory?: (id: string | null) => void;
+  /**
+   * Optionele tweede filterrij (bv. prijsranges op het Shop-scherm),
+   * bovenop de verplichte categoriefilter.
+   */
+  extraFilters?: FilterOption[];
+  selectedExtraId?: string | null;
+  onSelectExtra?: (id: string | null) => void;
+  extraAllLabel?: string;
   sortOptions: SortOption[];
   selectedSort: string;
   onSelectSort: (value: string) => void;
@@ -30,6 +38,10 @@ export function SearchFilterBar({
   categories,
   selectedCategoryId,
   onSelectCategory,
+  extraFilters,
+  selectedExtraId,
+  onSelectExtra,
+  extraAllLabel = 'Alle prijzen',
   sortOptions,
   selectedSort,
   onSelectSort,
@@ -68,6 +80,27 @@ export function SearchFilterBar({
               label={cat.label}
               active={selectedCategoryId === cat.id}
               onPress={() => onSelectCategory(cat.id)}
+            />
+          ))}
+        </ScrollView>
+      )}
+
+      {extraFilters && extraFilters.length > 0 && onSelectExtra && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipRow}>
+          <Chip
+            label={extraAllLabel}
+            active={!selectedExtraId}
+            onPress={() => onSelectExtra(null)}
+          />
+          {extraFilters.map((opt) => (
+            <Chip
+              key={opt.id}
+              label={opt.label}
+              active={selectedExtraId === opt.id}
+              onPress={() => onSelectExtra(opt.id)}
             />
           ))}
         </ScrollView>
