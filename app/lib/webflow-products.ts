@@ -76,12 +76,23 @@ export async function fetchWebflowProducts(): Promise<FetchedProduct[]> {
     const compareValue = firstSku?.fieldData['compare-at-price']?.value;
     const velden = item.product.fieldData;
 
+    /* Alle productfoto's: hoofdfoto plus de extra foto's van de sku. */
+    const imageUrls: string[] = [];
+    if (image?.url) imageUrls.push(image.url);
+    (firstSku?.fieldData['more-images'] || []).forEach((foto) => {
+      if (foto?.url && !imageUrls.includes(foto.url)) imageUrls.push(foto.url);
+    });
+
     return {
       raw: item,
       card: {
         id: item.product.id,
         name: velden.name,
+        slug: velden.slug,
         imageUrl: image?.url,
+        imageUrls,
+        description: velden.description,
+        specificaties: velden.specificaties,
         priceEuro: typeof priceValue === 'number' ? priceValue / 100 : undefined,
         vergelijkPrijsEuro: typeof compareValue === 'number' ? compareValue / 100 : undefined,
         merk: velden.merk,

@@ -7,7 +7,13 @@ import { EkoColors, EkoFonts, EkoRadius } from '@/constants/eko-theme';
 export type ProductCardData = {
   id: string;
   name: string;
+  slug?: string;
   imageUrl?: string;
+  /** Alle productfoto's (hoofdfoto + extra foto's) voor de fotogalerij. */
+  imageUrls?: string[];
+  description?: string;
+  /** Samenstelling en specificaties als rich text (HTML) uit Webflow. */
+  specificaties?: string;
   priceEuro?: number;
   /** Adviesprijs bij afgeprijsde artikelen (sale). */
   vergelijkPrijsEuro?: number;

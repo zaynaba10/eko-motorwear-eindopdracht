@@ -128,7 +128,12 @@ export default function CategorieScherm() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.bestsellersRij}>
               {bestsellers.map((p) => (
-                <ProductTegel key={p.id} product={p} breedte={170} />
+                <ProductTegel
+                  key={p.id}
+                  product={p}
+                  breedte={170}
+                  onPress={() => router.push(`/product/${p.id}`)}
+                />
               ))}
             </ScrollView>
           </View>

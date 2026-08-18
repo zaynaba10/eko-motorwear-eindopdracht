@@ -1,259 +1,892 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
+  Modal,
+  Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
-  TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ProductCardData } from '@/components/product-card';
+import { ProductTegel } from '@/components/winkel/product-tegel';
 import { EkoColors, EkoFonts, EkoRadius } from '@/constants/eko-theme';
-import { euro } from '@/lib/format';
-import { fetchWebflowProduct, ProductDetails } from '@/lib/webflow-products';
+import { laatstBekeken, markeerBekeken, verwijderBekeken } from '@/lib/laatst-bekeken';
+import { parseRichText } from '@/lib/rich-text';
+import { fetchCategorieIds } from '@/lib/webflow-categories';
+import { fetchWebflowProducts } from '@/lib/webflow-products';
+import { HOOFDCATEGORIEEN, vindHoofdcategorie, vindSubcategorie } from '@/lib/winkel-boom';
 
 /**
- * ProductDetailsScreen — dynamische route (app/product/[id].tsx), bereikt
- * vanuit het Shop-scherm via router.push(`/product/${id}`). De ID komt binnen
- * via de route-params en het product wordt hier opgehaald via het
- * "endpoint per product (via ID)" uit de opdracht.
- *
- * Bevat de verplichte state: aantal aanpassen (+/-, minimum 1) en de
- * totale prijs die live meetelt.
+ * Productpagina in warenhuisstijl: fotogalerij met bladeren, merk, naam en
+ * prijs, kleur- en maatkeuze (onderschuifpaneel), winkelvoorraad, maatadvies,
+ * inklapbare informatieblokken en de secties "Anderen bekeken ook",
+ * "Laatst bekeken" en "Bekijk meer", met onderaan een vaste
+ * In winkelmand-knop.
  */
-export default function ProductDetailsScreen() {
+
+/** Maten per hoofdcategorie, zoals in de winkel gevoerd. */
+const MATEN: Record<string, string[]> = {
+  motorkledij: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+  handschoenen: ['S', 'M', 'L', 'XL'],
+  helmet: ['XS', 'S', 'M', 'L', 'XL'],
+  laarzen: ['40', '41', '42', '43', '44', '45', '46'],
+  'protection-set': ['S', 'M', 'L', 'XL'],
+};
+
+function isSale(p: ProductCardData): boolean {
+  return (
+    typeof p.vergelijkPrijsEuro === 'number' &&
+    typeof p.priceEuro === 'number' &&
+    p.vergelijkPrijsEuro > p.priceEuro
+  );
+}
+
+export default function ProductScherm() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { width: schermBreedte } = useWindowDimensions();
 
-  const [product, setProduct] = useState<ProductDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [producten, setProducten] = useState<ProductCardData[]>([]);
+  const [catIds, setCatIds] = useState<Record<string, string>>({});
+  const [laden, setLaden] = useState(true);
 
-  const [aantal, setAantal] = useState(1);
+  const [fotoIndex, setFotoIndex] = useState(0);
+  const [favoriet, setFavoriet] = useState(false);
   const [maat, setMaat] = useState<string | null>(null);
+  const [maatOpen, setMaatOpen] = useState(false);
+  const [voorraadOpen, setVoorraadOpen] = useState(false);
+  const [openBlok, setOpenBlok] = useState<string | null>(null);
+  const [toegevoegd, setToegevoegd] = useState(false);
+  const [tik, verversTik] = useState(0);
+  const toegevoegdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!id) return;
-    fetchWebflowProduct(id)
-      .then((item) => {
-        setProduct(item);
-        setLoading(false);
+    Promise.all([fetchWebflowProducts(), fetchCategorieIds()])
+      .then(([items, ids]) => {
+        setProducten(items.map((i) => i.card));
+        setCatIds(ids);
+        setLaden(false);
       })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [id]);
+      .catch(() => setLaden(false));
+    return () => {
+      if (toegevoegdTimer.current) clearTimeout(toegevoegdTimer.current);
+    };
+  }, []);
 
-  if (loading) {
+  const product = producten.find((p) => p.id === id);
+
+  /* Bij welke categorieën hoort dit product (slugs uit de winkelboom)? */
+  const eigenSlugs = useMemo(() => {
+    if (!product) return [];
+    const ids = new Set(product.categorieIds || []);
+    return Object.keys(catIds).filter((slug) => ids.has(catIds[slug]));
+  }, [product, catIds]);
+
+  const subcategorie = eigenSlugs.map((s) => vindSubcategorie(s)).find(Boolean);
+  const hoofd =
+    eigenSlugs.map((s) => vindHoofdcategorie(s)).find(Boolean) ??
+    (subcategorie ? vindHoofdcategorie(subcategorie.slug) : undefined);
+  const maten = hoofd ? MATEN[hoofd.slug] : undefined;
+
+  /* Laatst bekeken bijhouden. */
+  useEffect(() => {
+    if (product) markeerBekeken(product.id);
+  }, [product]);
+
+  /* Anderen bekeken ook: producten uit dezelfde categorie. */
+  const verwant = useMemo(() => {
+    if (!product) return [];
+    const ids = new Set(product.categorieIds || []);
+    return producten
+      .filter((p) => p.id !== product.id && (p.categorieIds || []).some((c) => ids.has(c)))
+      .slice(0, 6);
+  }, [product, producten]);
+
+  const eerderBekeken = useMemo(
+    () =>
+      laatstBekeken()
+        .filter((bid) => bid !== id)
+        .map((bid) => producten.find((p) => p.id === bid))
+        .filter((p): p is ProductCardData => !!p),
+    // 'tik' dwingt een verversing af wanneer een tegel met het kruisje wordt verwijderd.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [id, producten, tik]
+  );
+
+  if (laden) {
     return (
       <View style={styles.center}>
+        <Stack.Screen options={{ headerShown: false }} />
         <ActivityIndicator size="large" color={EkoColors.primary} />
       </View>
     );
   }
 
-  if (error || !product) {
+  if (!product) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>{error ? `Fout: ${error}` : 'Product niet gevonden.'}</Text>
+        <Stack.Screen options={{ headerShown: false }} />
+        <Text style={styles.grijsTekst}>Product niet gevonden.</Text>
       </View>
     );
   }
 
-  const totaal =
-    typeof product.priceEuro === 'number' ? product.priceEuro * aantal : undefined;
+  const fotos = product.imageUrls?.length
+    ? product.imageUrls
+    : product.imageUrl
+      ? [product.imageUrl]
+      : [];
+  const sale = isSale(product);
+  const specBlokken = parseRichText(product.specificaties);
+
+  function deel() {
+    Share.share({
+      message: `${product!.name} — EKO Motorwear\nhttps://eko-exampenopdracht.webflow.io/product/${product!.slug ?? ''}`,
+    }).catch(() => {});
+  }
+
+  function inWinkelmand() {
+    if (maten && !maat) {
+      setMaatOpen(true);
+      return;
+    }
+    setToegevoegd(true);
+    if (toegevoegdTimer.current) clearTimeout(toegevoegdTimer.current);
+    toegevoegdTimer.current = setTimeout(() => setToegevoegd(false), 2000);
+  }
 
   return (
-    <>
-      <Stack.Screen options={{ title: product.name, headerBackTitle: 'Shop' }} />
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 60 }}>
-        {product.imageUrl && (
-          <Image source={{ uri: product.imageUrl }} style={styles.heroImage} contentFit="cover" />
-        )}
-        <View style={styles.content}>
-          <Text style={styles.title}>{product.name}</Text>
+    <View style={styles.scherm}>
+      <Stack.Screen options={{ headerShown: false }} />
 
-          {typeof product.priceEuro === 'number' && (
-            <Text style={styles.price}>{euro(product.priceEuro)}</Text>
-          )}
-
-          {product.description && <Text style={styles.p}>{product.description}</Text>}
-
-          {product.maten.length > 0 && (
-            <>
-              <Text style={styles.label}>Maat</Text>
-              <View style={styles.maatRow}>
-                {product.maten.map((m) => (
-                  <TouchableOpacity
-                    key={m}
-                    onPress={() => setMaat(m)}
-                    style={[styles.maatChip, maat === m && styles.maatChipActive]}>
-                    <Text style={[styles.maatText, maat === m && styles.maatTextActive]}>{m}</Text>
-                  </TouchableOpacity>
-                ))}
+      <ScrollView contentContainerStyle={{ paddingBottom: 130 }} showsVerticalScrollIndicator={false}>
+        {/* Fotogalerij met bladeren */}
+        <View>
+          <FlatList
+            data={fotos}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(uri, i) => `${i}-${uri}`}
+            onMomentumScrollEnd={(e) =>
+              setFotoIndex(Math.round(e.nativeEvent.contentOffset.x / schermBreedte))
+            }
+            renderItem={({ item }) => (
+              <View style={[styles.fotoVlak, { width: schermBreedte }]}>
+                <Image
+                  source={{ uri: item }}
+                  style={styles.foto}
+                  contentFit="contain"
+                  transition={150}
+                />
               </View>
-            </>
+            )}
+            ListEmptyComponent={
+              <View style={[styles.fotoVlak, styles.fotoLeeg, { width: schermBreedte }]}>
+                <Ionicons name="image-outline" size={48} color={EkoColors.darkGray} />
+              </View>
+            }
+          />
+          {fotos.length > 1 && (
+            <View style={styles.fotoBalkjes}>
+              {fotos.map((_, i) => (
+                <View key={i} style={[styles.balkje, i === fotoIndex && styles.balkjeAan]} />
+              ))}
+            </View>
           )}
+        </View>
 
-          <Text style={styles.label}>Aantal</Text>
-          <View style={styles.aantalRow}>
-            <TouchableOpacity
-              onPress={() => setAantal((n) => Math.max(1, n - 1))}
-              style={[styles.aantalKnop, aantal === 1 && styles.aantalKnopUit]}>
-              <Text style={styles.aantalKnopText}>−</Text>
-            </TouchableOpacity>
-            <Text style={styles.aantalWaarde}>{aantal}</Text>
-            <TouchableOpacity onPress={() => setAantal((n) => n + 1)} style={styles.aantalKnop}>
-              <Text style={styles.aantalKnopText}>+</Text>
-            </TouchableOpacity>
-          </View>
+        {/* Merk, naam en prijs */}
+        <View style={styles.info}>
+          {!!product.merk && <Text style={styles.merk}>{product.merk}</Text>}
+          <Text style={styles.naam}>{product.name}</Text>
+          {typeof product.priceEuro === 'number' && (
+            <View style={styles.prijsRij}>
+              {sale && (
+                <Text style={styles.adviesPrijs}>
+                  € {product.vergelijkPrijsEuro!.toFixed(2)}
+                </Text>
+              )}
+              <Text style={[styles.prijs, sale && styles.prijsSale]}>
+                € {product.priceEuro.toFixed(2)}
+              </Text>
+            </View>
+          )}
+          <View style={styles.scheiding} />
 
-          {typeof totaal === 'number' && (
-            <View style={styles.totaalRow}>
-              <Text style={styles.totaalLabel}>Totale prijs</Text>
-              <Text style={styles.totaalWaarde}>{euro(totaal)}</Text>
+          {/* Kleur */}
+          {!!product.kleur && (
+            <View style={styles.kleurRij}>
+              <Text style={styles.kleurLabel}>Kleur</Text>
+              <Text style={styles.kleurWaarde}>{product.kleur}</Text>
             </View>
           )}
 
-          <TouchableOpacity onPress={() => router.back()} style={styles.navRow}>
-            <Text style={styles.navLink}>← Terug naar de shop</Text>
-          </TouchableOpacity>
+          {/* Maat */}
+          {maten && (
+            <View style={{ marginTop: 14 }}>
+              <Text style={styles.kleurLabel}>Maat</Text>
+              <Pressable style={styles.maatVeld} onPress={() => setMaatOpen(true)}>
+                <Text style={maat ? styles.maatWaarde : styles.maatPlaceholder}>
+                  {maat ?? 'Selecteer maat'}
+                </Text>
+                <Ionicons name="chevron-down" size={18} color={EkoColors.primaryDark} />
+              </Pressable>
+              <View style={styles.infoVlak}>
+                <Ionicons
+                  name="information-circle-outline"
+                  size={20}
+                  color={EkoColors.primaryDark}
+                />
+                <Text style={styles.infoVlakTekst}>
+                  Twijfel je tussen twee maten? Onze artikelen vallen normaal op maat.
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Winkelvoorraad */}
+          <Pressable style={styles.voorraadKnop} onPress={() => setVoorraadOpen((v) => !v)}>
+            <Text style={styles.voorraadKnopTekst}>Bekijk winkelvoorraad</Text>
+          </Pressable>
+          {voorraadOpen && (
+            <View style={styles.infoVlak}>
+              <Ionicons name="storefront-outline" size={20} color={EkoColors.primaryDark} />
+              <Text style={styles.infoVlakTekst}>
+                Dit artikel ligt in onze showroom. Kom gerust langs om het te passen — onze
+                medewerkers helpen je met de juiste maat.
+              </Text>
+            </View>
+          )}
+
+          {/* Maatadvies */}
+          {maten && (
+            <View style={styles.meetKaart}>
+              <View style={styles.meetIcoon}>
+                <Ionicons name="resize-outline" size={26} color={EkoColors.white} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.meetKop}>Hoe kies ik de juiste maat?</Text>
+                <Text style={styles.meetTekst}>
+                  Meet je lichaam op en vergelijk met de maattabel van het merk, zo bepaal je de
+                  perfecte pasvorm voor op de motor.
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* Inklapbare informatieblokken */}
+        <View style={{ marginTop: 10 }}>
+          {!!product.description && (
+            <InfoBlok
+              label="Beschrijving"
+              open={openBlok === 'beschrijving'}
+              onPress={() => setOpenBlok(openBlok === 'beschrijving' ? null : 'beschrijving')}>
+              <Text style={styles.blokTekst}>{product.description}</Text>
+            </InfoBlok>
+          )}
+          {(specBlokken.length > 0 || product.materiaal || product.geslacht || product.seizoen) && (
+            <InfoBlok
+              label="Samenstelling en specificaties"
+              open={openBlok === 'specificaties'}
+              onPress={() => setOpenBlok(openBlok === 'specificaties' ? null : 'specificaties')}>
+              {specBlokken.map((blok, i) =>
+                blok.type === 'h2' || blok.type === 'h3' ? (
+                  <Text key={i} style={styles.blokKopje}>
+                    {blok.text}
+                  </Text>
+                ) : (
+                  <Text key={i} style={styles.blokTekst}>
+                    {blok.text}
+                  </Text>
+                )
+              )}
+              {specBlokken.length === 0 && (
+                <>
+                  {!!product.materiaal && (
+                    <Text style={styles.blokTekst}>Materiaal: {product.materiaal}</Text>
+                  )}
+                  {!!product.geslacht && (
+                    <Text style={styles.blokTekst}>Geslacht: {product.geslacht}</Text>
+                  )}
+                  {!!product.seizoen && (
+                    <Text style={styles.blokTekst}>Seizoen: {product.seizoen}</Text>
+                  )}
+                </>
+              )}
+            </InfoBlok>
+          )}
+          <InfoBlok
+            label="Bestellen en retourneren"
+            open={openBlok === 'bestellen'}
+            onPress={() => setOpenBlok(openBlok === 'bestellen' ? null : 'bestellen')}>
+            <Text style={styles.blokKopje}>Bezorgen</Text>
+            <Text style={styles.blokTekst}>
+              Je bestelling wordt zorgvuldig verpakt en binnen 1 tot 3 werkdagen thuis geleverd.
+              Zodra je pakket onderweg is, ontvang je een track & trace-code.
+            </Text>
+            <Text style={styles.blokKopje}>Retourneren</Text>
+            <Text style={styles.blokTekst}>
+              Online aankopen kan je binnen 30 dagen gratis retourneren in de showroom of via een
+              retourzending. Zo bestel je zonder zorgen.
+            </Text>
+          </InfoBlok>
+        </View>
+
+        {/* Anderen bekeken ook */}
+        {verwant.length > 0 && (
+          <View style={styles.sectie}>
+            <Text style={styles.sectieKop}>Anderen bekeken ook</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.sectieRij}>
+              {verwant.map((p) => (
+                <ProductTegel
+                  key={p.id}
+                  product={p}
+                  breedte={170}
+                  onPress={() => router.push(`/product/${p.id}`)}
+                />
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Laatst bekeken */}
+        {eerderBekeken.length > 0 && (
+          <View style={styles.sectie}>
+            <Text style={styles.sectieKop}>Laatst bekeken</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.sectieRij}>
+              {eerderBekeken.map((p) => (
+                <View key={p.id} style={{ width: 170 }}>
+                  <ProductTegel
+                    product={p}
+                    breedte={170}
+                    onPress={() => router.push(`/product/${p.id}`)}
+                  />
+                  <Pressable
+                    style={styles.verwijderKnop}
+                    hitSlop={8}
+                    onPress={() => {
+                      verwijderBekeken(p.id);
+                      verversTik((t) => t + 1);
+                    }}>
+                    <Ionicons name="close" size={16} color={EkoColors.primaryDark} />
+                  </Pressable>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Bekijk meer */}
+        <View style={styles.sectie}>
+          <Text style={styles.sectieKop}>Bekijk meer</Text>
+          <View style={styles.meerRij}>
+            {!!product.merk && (
+              <View style={styles.meerChipStil}>
+                <Text style={styles.meerChipTekst}>{product.merk}</Text>
+              </View>
+            )}
+            {subcategorie && (
+              <Pressable
+                style={styles.meerChip}
+                onPress={() => router.push(`/lijst/${subcategorie.slug}`)}>
+                <Text style={styles.meerChipTekst}>{subcategorie.naam}</Text>
+              </Pressable>
+            )}
+            {hoofd && (
+              <Pressable
+                style={styles.meerChip}
+                onPress={() => router.push(`/categorie/${hoofd.slug}`)}>
+                <Text style={styles.meerChipTekst}>{hoofd.naam}</Text>
+              </Pressable>
+            )}
+            {!subcategorie && !hoofd && (
+              <Pressable
+                style={styles.meerChip}
+                onPress={() => router.push(`/categorie/${HOOFDCATEGORIEEN[0].slug}`)}>
+                <Text style={styles.meerChipTekst}>Winkel</Text>
+              </Pressable>
+            )}
+          </View>
         </View>
       </ScrollView>
-    </>
+
+      {/* Zwevende knoppen boven de foto */}
+      <View style={[styles.kopOverlay, { top: insets.top + 6 }]}>
+        <Pressable style={styles.rondeKnop} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={22} color={EkoColors.primaryDark} />
+        </Pressable>
+        <View style={styles.kopPil}>
+          <Pressable hitSlop={8} onPress={deel}>
+            <Ionicons name="share-outline" size={20} color={EkoColors.primaryDark} />
+          </Pressable>
+          <Pressable hitSlop={8} onPress={() => setFavoriet((v) => !v)}>
+            <Ionicons
+              name={favoriet ? 'heart' : 'heart-outline'}
+              size={20}
+              color={favoriet ? EkoColors.primary : EkoColors.primaryDark}
+            />
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Vaste In winkelmand-knop */}
+      <View style={[styles.mandBalk, { paddingBottom: Math.max(insets.bottom, 14) }]}>
+        <Pressable
+          style={[styles.mandKnop, toegevoegd && styles.mandKnopKlaar]}
+          onPress={inWinkelmand}>
+          <Text style={styles.mandKnopTekst}>
+            {toegevoegd ? 'Toegevoegd aan winkelmand ✓' : 'In winkelmand'}
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* Onderschuifpaneel: maat kiezen */}
+      <Modal
+        visible={maatOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setMaatOpen(false)}>
+        <Pressable style={styles.paneelAchter} onPress={() => setMaatOpen(false)} />
+        <View style={[styles.paneel, { paddingBottom: Math.max(insets.bottom, 20) }]}>
+          <View style={styles.paneelGreep} />
+          <View style={styles.paneelKopRij}>
+            <Text style={styles.paneelKop}>Selecteer maat</Text>
+            <Pressable hitSlop={8} onPress={() => setMaatOpen(false)}>
+              <Ionicons name="close" size={24} color={EkoColors.primaryDark} />
+            </Pressable>
+          </View>
+          {(maten ?? []).map((m) => (
+            <Pressable
+              key={m}
+              style={styles.paneelRij}
+              onPress={() => {
+                setMaat(m);
+                setMaatOpen(false);
+              }}>
+              <Text style={[styles.paneelRijTekst, maat === m && styles.paneelRijTekstAan]}>
+                {m}
+              </Text>
+              {maat === m && <Ionicons name="checkmark" size={20} color={EkoColors.primary} />}
+            </Pressable>
+          ))}
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+function InfoBlok({
+  label,
+  open,
+  onPress,
+  children,
+}: {
+  label: string;
+  open: boolean;
+  onPress: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <View style={styles.infoBlok}>
+      <Pressable style={styles.infoBlokKop} onPress={onPress}>
+        <Ionicons
+          name={open ? 'remove' : 'add'}
+          size={22}
+          color={EkoColors.primaryDark}
+        />
+        <Text style={styles.infoBlokLabel}>{label}</Text>
+      </Pressable>
+      {open && <View style={styles.infoBlokInhoud}>{children}</View>}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scherm: {
     flex: 1,
     backgroundColor: EkoColors.white,
   },
   center: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: EkoColors.white,
   },
-  errorText: {
+  grijsTekst: {
     fontFamily: EkoFonts.bodyRegular,
     fontSize: 15,
-    color: EkoColors.primary,
+    color: EkoColors.paragraphGray,
   },
-  heroImage: {
+  fotoVlak: {
+    height: 420,
+    backgroundColor: EkoColors.lightGray,
+  },
+  foto: {
     width: '100%',
-    height: 300,
+    height: '100%',
   },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+  fotoLeeg: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  title: {
+  fotoBalkjes: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 16,
+    marginTop: 10,
+  },
+  balkje: {
+    flex: 1,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: EkoColors.lightSteelBlue,
+  },
+  balkjeAan: {
+    backgroundColor: EkoColors.primaryDark,
+  },
+  info: {
+    paddingHorizontal: 16,
+    paddingTop: 18,
+  },
+  merk: {
     fontFamily: EkoFonts.headingBold,
     fontSize: 24,
     letterSpacing: 0.5,
+    textTransform: 'uppercase',
     color: EkoColors.primaryDark,
-    marginBottom: 8,
   },
-  price: {
-    fontFamily: EkoFonts.headingBold,
-    fontSize: 20,
-    color: EkoColors.primary,
-    marginBottom: 14,
-  },
-  p: {
+  naam: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 15,
-    lineHeight: 23,
+    fontSize: 16,
     color: EkoColors.paragraphGray,
-    marginBottom: 18,
+    marginTop: 4,
   },
-  label: {
-    fontFamily: EkoFonts.bodyBold,
-    fontSize: 14,
-    color: EkoColors.primaryDark,
-    marginBottom: 8,
-  },
-  maatRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 18,
-  },
-  maatChip: {
-    borderRadius: EkoRadius.tag,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: EkoColors.lightGray,
-  },
-  maatChipActive: {
-    backgroundColor: EkoColors.primary,
-  },
-  maatText: {
-    fontFamily: EkoFonts.bodyMedium,
-    fontSize: 13,
-    color: EkoColors.paragraphGray,
-  },
-  maatTextActive: {
-    color: EkoColors.white,
-  },
-  aantalRow: {
+  prijsRij: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-    marginBottom: 20,
+    gap: 10,
+    marginTop: 10,
   },
-  aantalKnop: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  prijs: {
+    fontFamily: EkoFonts.bodyBold,
+    fontSize: 20,
+    color: EkoColors.primaryDark,
+  },
+  prijsSale: {
+    color: EkoColors.primary,
+  },
+  adviesPrijs: {
+    fontFamily: EkoFonts.bodyRegular,
+    fontSize: 16,
+    color: EkoColors.darkGray,
+    textDecorationLine: 'line-through',
+  },
+  scheiding: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: EkoColors.lightSteelBlue,
+    marginVertical: 18,
+  },
+  kleurRij: {
+    flexDirection: 'row',
+    gap: 14,
+    alignItems: 'center',
+  },
+  kleurLabel: {
+    fontFamily: EkoFonts.bodyBold,
+    fontSize: 15,
+    color: EkoColors.primaryDark,
+  },
+  kleurWaarde: {
+    fontFamily: EkoFonts.bodyRegular,
+    fontSize: 15,
+    color: EkoColors.paragraphGray,
+  },
+  maatVeld: {
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: EkoColors.primaryDark,
+    borderRadius: EkoRadius.small,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  maatWaarde: {
+    fontFamily: EkoFonts.bodyMedium,
+    fontSize: 15,
+    color: EkoColors.primaryDark,
+  },
+  maatPlaceholder: {
+    fontFamily: EkoFonts.bodyRegular,
+    fontSize: 15,
+    color: EkoColors.paragraphGray,
+  },
+  infoVlak: {
+    flexDirection: 'row',
+    gap: 10,
     backgroundColor: EkoColors.lightGray,
+    borderRadius: EkoRadius.small,
+    padding: 14,
+    marginTop: 12,
+  },
+  infoVlakTekst: {
+    flex: 1,
+    fontFamily: EkoFonts.bodyRegular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: EkoColors.primaryDark,
+  },
+  voorraadKnop: {
+    marginTop: 18,
+    borderWidth: 1,
+    borderColor: EkoColors.primaryDark,
+    borderRadius: EkoRadius.pill,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  voorraadKnopTekst: {
+    fontFamily: EkoFonts.bodyMedium,
+    fontSize: 15,
+    color: EkoColors.primaryDark,
+  },
+  meetKaart: {
+    flexDirection: 'row',
+    gap: 14,
+    backgroundColor: EkoColors.lightGray,
+    borderRadius: EkoRadius.small,
+    padding: 14,
+    marginTop: 18,
+    alignItems: 'center',
+  },
+  meetIcoon: {
+    width: 52,
+    height: 52,
+    borderRadius: EkoRadius.small,
+    backgroundColor: EkoColors.primaryDark,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  aantalKnopUit: {
-    opacity: 0.4,
-  },
-  aantalKnopText: {
-    fontFamily: EkoFonts.bodyBold,
-    fontSize: 18,
-    color: EkoColors.primaryDark,
-  },
-  aantalWaarde: {
-    fontFamily: EkoFonts.bodyBold,
-    fontSize: 16,
-    color: EkoColors.primaryDark,
-    minWidth: 24,
-    textAlign: 'center',
-  },
-  totaalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: EkoColors.lightGray,
-    paddingTop: 16,
-    marginBottom: 24,
-  },
-  totaalLabel: {
+  meetKop: {
     fontFamily: EkoFonts.bodyBold,
     fontSize: 15,
     color: EkoColors.primaryDark,
+    marginBottom: 4,
   },
-  totaalWaarde: {
-    fontFamily: EkoFonts.headingBold,
-    fontSize: 20,
-    color: EkoColors.primary,
-  },
-  navRow: {
-    marginTop: 4,
-  },
-  navLink: {
-    fontFamily: EkoFonts.bodyBold,
+  meetTekst: {
+    fontFamily: EkoFonts.bodyRegular,
     fontSize: 13,
+    lineHeight: 19,
+    color: EkoColors.paragraphGray,
+  },
+  infoBlok: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: EkoColors.lightSteelBlue,
+    marginHorizontal: 16,
+  },
+  infoBlokKop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingVertical: 18,
+  },
+  infoBlokLabel: {
+    fontFamily: EkoFonts.bodyBold,
+    fontSize: 16,
+    color: EkoColors.primaryDark,
+  },
+  infoBlokInhoud: {
+    paddingBottom: 18,
+  },
+  blokKopje: {
+    fontFamily: EkoFonts.bodyBold,
+    fontSize: 15,
+    color: EkoColors.primaryDark,
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  blokTekst: {
+    fontFamily: EkoFonts.bodyRegular,
+    fontSize: 14,
+    lineHeight: 21,
+    color: EkoColors.paragraphGray,
+    marginBottom: 6,
+  },
+  sectie: {
+    marginTop: 30,
+  },
+  sectieKop: {
+    fontFamily: EkoFonts.headingBold,
+    fontSize: 24,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: EkoColors.primaryDark,
+    paddingHorizontal: 16,
+    marginBottom: 14,
+  },
+  sectieRij: {
+    paddingHorizontal: 16,
+    gap: 14,
+  },
+  verwijderKnop: {
+    position: 'absolute',
+    right: 10,
+    top: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: EkoColors.whiteTranslucent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  meerRij: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    paddingHorizontal: 16,
+  },
+  meerChip: {
+    borderWidth: 1,
+    borderColor: EkoColors.primaryDark,
+    borderRadius: EkoRadius.small,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  meerChipStil: {
+    borderWidth: 1,
+    borderColor: EkoColors.lightSteelBlue,
+    borderRadius: EkoRadius.small,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  meerChipTekst: {
+    fontFamily: EkoFonts.bodyMedium,
+    fontSize: 14,
+    color: EkoColors.primaryDark,
+  },
+  kopOverlay: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  rondeKnop: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: EkoColors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: EkoColors.primaryDark,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  kopPil: {
+    flexDirection: 'row',
+    gap: 18,
+    backgroundColor: EkoColors.white,
+    borderRadius: EkoRadius.pill,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    shadowColor: EkoColors.primaryDark,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  mandBalk: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    backgroundColor: EkoColors.white,
+  },
+  mandKnop: {
+    backgroundColor: EkoColors.primary,
+    borderRadius: EkoRadius.pill,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  mandKnopKlaar: {
+    backgroundColor: EkoColors.primaryDark,
+  },
+  mandKnopTekst: {
+    fontFamily: EkoFonts.headingMedium,
+    fontSize: 14,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: EkoColors.white,
+  },
+  paneelAchter: {
+    flex: 1,
+    backgroundColor: 'rgba(22,35,46,0.4)',
+  },
+  paneel: {
+    backgroundColor: EkoColors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  paneelGreep: {
+    alignSelf: 'center',
+    width: 44,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: EkoColors.lightSteelBlue,
+    marginBottom: 14,
+  },
+  paneelKopRij: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  paneelKop: {
+    fontFamily: EkoFonts.headingBold,
+    fontSize: 22,
+    letterSpacing: 0.5,
+    color: EkoColors.primaryDark,
+  },
+  paneelRij: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: EkoColors.lightSteelBlue,
+  },
+  paneelRijTekst: {
+    fontFamily: EkoFonts.bodyRegular,
+    fontSize: 16,
+    color: EkoColors.primaryDark,
+  },
+  paneelRijTekstAan: {
+    fontFamily: EkoFonts.bodyBold,
     color: EkoColors.primary,
   },
 });

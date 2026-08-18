@@ -256,7 +256,9 @@ export default function LijstScherm() {
           columnWrapperStyle={{ gap: 16, paddingHorizontal: 16 }}
           ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
           contentContainerStyle={{ paddingTop: 12, paddingBottom: 60 }}
-          renderItem={({ item }) => <ProductTegel product={item} />}
+          renderItem={({ item }) => (
+            <ProductTegel product={item} onPress={() => router.push(`/product/${item.id}`)} />
+          )}
           ListEmptyComponent={<Text style={[styles.leegTekst, { padding: 16 }]}>{leegTekst}</Text>}
         />
       )}

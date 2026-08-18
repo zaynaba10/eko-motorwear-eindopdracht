@@ -89,7 +89,9 @@ export default function ShopScreen() {
               {zoekResultaten.length === 1 ? ' resultaat' : ' resultaten'} voor “{zoek.trim()}”
             </Text>
           }
-          renderItem={({ item }) => <ProductTegel product={item} />}
+          renderItem={({ item }) => (
+            <ProductTegel product={item} onPress={() => router.push(`/product/${item.id}`)} />
+          )}
           ListEmptyComponent={
             <Text style={styles.leegTekst}>Geen producten gevonden. Probeer een andere zoekterm.</Text>
           }
