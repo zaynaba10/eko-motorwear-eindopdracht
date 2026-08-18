@@ -3,15 +3,22 @@ import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { EkoColors, EkoFonts, EkoRadius } from '@/constants/eko-theme';
-import { euro } from '@/lib/format';
 
 export type ProductCardData = {
   id: string;
   name: string;
   imageUrl?: string;
   priceEuro?: number;
-  /** Categorie-ID's van dit product, voor de categoriefilter. */
-  categoryIds?: string[];
+  /** Adviesprijs bij afgeprijsde artikelen (sale). */
+  vergelijkPrijsEuro?: number;
+  merk?: string;
+  geslacht?: string;
+  kleur?: string;
+  materiaal?: string;
+  eigenschappen?: string[];
+  seizoen?: string;
+  /** Webflow-categorie-id's waar het product aan gekoppeld is. */
+  categorieIds?: string[];
 };
 
 type ProductCardProps = {
@@ -36,7 +43,7 @@ export function ProductCard({ product, onPress, width }: ProductCardProps) {
         {product.name}
       </Text>
       {typeof product.priceEuro === 'number' && (
-        <Text style={styles.price}>{euro(product.priceEuro)}</Text>
+        <Text style={styles.price}>€ {product.priceEuro.toFixed(2)}</Text>
       )}
     </Pressable>
   );
