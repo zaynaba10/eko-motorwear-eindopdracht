@@ -25,6 +25,12 @@ export type ProductCardData = {
   seizoen?: string;
   /** Webflow-categorie-id's waar het product aan gekoppeld is. */
   categorieIds?: string[];
+  /** Maten uit de SKU-eigenschappen van dit product (zoals op de website). */
+  maten?: string[];
+  /** Extra uitleg (rich text) uit het veld More Info. */
+  meerInfo?: string;
+  /** Staat dit product op "feature on home" in Webflow? */
+  uitgelicht?: boolean;
 };
 
 type ProductCardProps = {

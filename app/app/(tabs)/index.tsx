@@ -122,7 +122,9 @@ export default function WinkelStartScherm() {
     if (!actiefMerk && merken.length > 0) setActiefMerk(merken[0]);
   }, [merken, actiefMerk]);
 
-  const nieuweCollectie = zichtbaar.slice(0, 4);
+  /* Producten met "feature on home" aan in Webflow krijgen voorrang. */
+  const uitgelicht = zichtbaar.filter((p) => p.uitgelicht);
+  const nieuweCollectie = (uitgelicht.length > 0 ? uitgelicht : zichtbaar).slice(0, 4);
   const merkProducten = producten.filter((p) => p.merk === actiefMerk).slice(0, 8);
   const inspiratie = blogs.slice(0, 4);
 

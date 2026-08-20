@@ -16,6 +16,13 @@ type WebflowSku = {
   };
 };
 
+/** Eén SKU-eigenschap uit Webflow, bv. "Maat" met de waarden S, M, L, XL. */
+type WebflowSkuProperty = {
+  id: string;
+  name: string;
+  enum: { id: string; name: string; slug: string }[];
+};
+
 type WebflowProductItem = {
   product: {
     id: string;
@@ -24,6 +31,10 @@ type WebflowProductItem = {
       slug: string;
       description?: string;
       specificaties?: string;
+      'more-info'?: string;
+      'feature-on-home'?: boolean;
+      'sku-properties'?: WebflowSkuProperty[];
+      galerij?: string | null;
       category?: string[];
       merk?: string;
       geslacht?: string;
@@ -76,12 +87,26 @@ export async function fetchWebflowProducts(): Promise<FetchedProduct[]> {
     const compareValue = firstSku?.fieldData['compare-at-price']?.value;
     const velden = item.product.fieldData;
 
-    /* Alle productfoto's: hoofdfoto plus de extra foto's van de sku. */
+    /* Alle productfoto's: het veld Galerij van de website, aangevuld met de
+       hoofdfoto en de extra foto's van de sku. */
     const imageUrls: string[] = [];
     if (image?.url) imageUrls.push(image.url);
+    (velden.galerij || '')
+      .split(',')
+      .map((u) => u.trim())
+      .filter(Boolean)
+      .forEach((url) => {
+        if (!imageUrls.includes(url)) imageUrls.push(url);
+      });
     (firstSku?.fieldData['more-images'] || []).forEach((foto) => {
       if (foto?.url && !imageUrls.includes(foto.url)) imageUrls.push(foto.url);
     });
+
+    /* Maten komen uit de SKU-eigenschap "Maat" van het product zelf. */
+    const maatEigenschap = (velden['sku-properties'] || []).find((eig) =>
+      /maat|size/i.test(eig.name)
+    );
+    const maten = maatEigenschap?.enum.map((waarde) => waarde.name);
 
     return {
       raw: item,
@@ -105,6 +130,9 @@ export async function fetchWebflowProducts(): Promise<FetchedProduct[]> {
           .filter(Boolean),
         seizoen: velden.seizoen,
         categorieIds: velden.category || [],
+        maten: maten && maten.length > 0 ? maten : undefined,
+        meerInfo: velden['more-info'],
+        uitgelicht: velden['feature-on-home'] === true,
       },
     };
   });

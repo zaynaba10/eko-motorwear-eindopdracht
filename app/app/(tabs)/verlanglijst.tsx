@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProductCardData } from '@/components/product-card';
 import { EkoColors, EkoFonts } from '@/constants/eko-theme';
 import { prijsKort } from '@/lib/format';
-import { matenVoorSlug } from '@/lib/maten';
+import { matenVoorProduct } from '@/lib/maten';
 import {
   useVerlanglijst,
   VERLANGLIJST_LIMIET,
@@ -79,7 +79,7 @@ export default function VerlanglijstScherm() {
         return {
           product,
           maat: item.maat,
-          maten: matenVoorSlug(hoofd?.slug),
+          maten: matenVoorProduct(product, hoofd?.slug),
           uitverkocht: typeof product.priceEuro !== 'number',
         };
       })

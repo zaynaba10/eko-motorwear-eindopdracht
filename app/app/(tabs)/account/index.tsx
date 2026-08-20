@@ -5,19 +5,47 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Groep, IconNaam, MenuRij } from '@/components/account-ui';
 import { EkoColors, EkoFonts, EkoRadius } from '@/constants/eko-theme';
+import { useBestellingen } from '@/lib/bestellingen';
+import { useVerlanglijst } from '@/lib/verlanglijst';
+import { actieveVoucher, useMandStaat } from '@/lib/winkelmand';
 
 const NAAM = 'zaynaba';
-const PUNTEN = 0;
 const DOEL = 750;
 
 type Item = { icoon: IconNaam; label: string; pad?: string; extra?: string };
 
-const GROEPEN: Item[][] = [
+/** Bouwt het menu op met de actuele aantallen uit verlanglijst, mand en bestellingen. */
+function maakGroepen(tellers: {
+  bestellingen: number;
+  verlanglijst: number;
+  mand: number;
+  voucher?: string;
+}): Item[][] {
+  return [
   [
-    { icoon: 'cube-outline', label: 'Mijn bestellingen', pad: '/account/bestellingen' },
+    {
+      icoon: 'cube-outline',
+      label: 'Mijn bestellingen',
+      pad: '/account/bestellingen',
+      extra: tellers.bestellingen > 0
+        ? `${tellers.bestellingen} ${tellers.bestellingen === 1 ? 'bestelling' : 'bestellingen'}`
+        : 'Nog geen bestellingen',
+    },
     { icoon: 'return-down-back-outline', label: 'Retouren', pad: '/account/retouren' },
-    { icoon: 'heart-outline', label: 'Verlanglijst', pad: '/account/verlanglijst' },
-    { icoon: 'pricetag-outline', label: 'Kortingscodes', pad: '/account/kortingscodes' },
+    {
+      icoon: 'heart-outline',
+      label: 'Verlanglijst',
+      pad: '/account/verlanglijst',
+      extra: tellers.verlanglijst > 0
+        ? `${tellers.verlanglijst} ${tellers.verlanglijst === 1 ? 'artikel' : 'artikelen'} bewaard`
+        : 'Nog niets bewaard',
+    },
+    {
+      icoon: 'pricetag-outline',
+      label: 'Kortingscodes',
+      pad: '/account/kortingscodes',
+      extra: tellers.voucher ? `${tellers.voucher} actief` : undefined,
+    },
   ],
   [
     { icoon: 'shield-checkmark-outline', label: 'EKO Club', pad: '/account/club' },
@@ -32,12 +60,28 @@ const GROEPEN: Item[][] = [
     { icoon: 'information-circle-outline', label: 'Privacy en voorwaarden', pad: '/account/privacy' },
     { icoon: 'star-outline', label: 'Beoordeel onze app', extra: 'Versie 1.0.0' },
   ],
-];
+  ];
+}
 
 export default function AccountHub() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const deel = Math.min(PUNTEN / DOEL, 1);
+
+  /* Het dashboard leest mee met de gedeelde staat, dus het volgt elke wijziging. */
+  const bestellingen = useBestellingen();
+  const verlanglijst = useVerlanglijst();
+  const { items } = useMandStaat();
+  const voucher = actieveVoucher();
+
+  const punten = Math.floor(bestellingen.reduce((som, b) => som + b.totaal, 0));
+  const deel = Math.min(punten / DOEL, 1);
+
+  const GROEPEN = maakGroepen({
+    bestellingen: bestellingen.length,
+    verlanglijst: verlanglijst.length,
+    mand: items.reduce((som, i) => som + i.aantal, 0),
+    voucher: voucher?.code,
+  });
 
   return (
     <View style={styles.scherm}>
@@ -59,7 +103,7 @@ export default function AccountHub() {
         <View style={styles.kaart}>
           <Text style={styles.kaartTitel}>EKO Club</Text>
           <View style={styles.balkRij}>
-            <Text style={styles.punten}>{PUNTEN} punten</Text>
+            <Text style={styles.punten}>{punten} punten</Text>
             <Text style={styles.punten}>{DOEL} punten</Text>
           </View>
           <View style={styles.balk}>

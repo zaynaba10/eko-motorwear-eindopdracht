@@ -20,7 +20,7 @@ import { ProductCardData } from '@/components/product-card';
 import { ProductTegel } from '@/components/winkel/product-tegel';
 import { EkoColors, EkoFonts, EkoRadius } from '@/constants/eko-theme';
 import { laatstBekeken, markeerBekeken, verwijderBekeken } from '@/lib/laatst-bekeken';
-import { matenVoorSlug } from '@/lib/maten';
+import { matenVoorProduct } from '@/lib/maten';
 import { parseRichText } from '@/lib/rich-text';
 import { staatOpVerlanglijst, useVerlanglijst, wisselVerlanglijst } from '@/lib/verlanglijst';
 import { fetchCategorieIds } from '@/lib/webflow-categories';
@@ -92,7 +92,7 @@ export default function ProductScherm() {
   const hoofd =
     eigenSlugs.map((s) => vindHoofdcategorie(s)).find(Boolean) ??
     (subcategorie ? vindHoofdcategorie(subcategorie.slug) : undefined);
-  const maten = matenVoorSlug(hoofd?.slug);
+  const maten = product ? matenVoorProduct(product, hoofd?.slug) : undefined;
 
   /* Laatst bekeken bijhouden. */
   useEffect(() => {
@@ -144,6 +144,7 @@ export default function ProductScherm() {
       : [];
   const sale = isSale(product);
   const specBlokken = parseRichText(product.specificaties);
+  const meerInfoBlokken = parseRichText(product.meerInfo);
 
   function deel() {
     Share.share({
@@ -291,6 +292,24 @@ export default function ProductScherm() {
               open={openBlok === 'beschrijving'}
               onPress={() => setOpenBlok(openBlok === 'beschrijving' ? null : 'beschrijving')}>
               <Text style={styles.blokTekst}>{product.description}</Text>
+            </InfoBlok>
+          )}
+          {meerInfoBlokken.length > 0 && (
+            <InfoBlok
+              label="Meer over dit artikel"
+              open={openBlok === 'meer-info'}
+              onPress={() => setOpenBlok(openBlok === 'meer-info' ? null : 'meer-info')}>
+              {meerInfoBlokken.map((blok, i) =>
+                blok.type === 'h2' || blok.type === 'h3' ? (
+                  <Text key={i} style={styles.blokKopje}>
+                    {blok.text}
+                  </Text>
+                ) : (
+                  <Text key={i} style={styles.blokTekst}>
+                    {blok.text}
+                  </Text>
+                )
+              )}
             </InfoBlok>
           )}
           {(specBlokken.length > 0 || product.materiaal || product.geslacht || product.seizoen) && (
