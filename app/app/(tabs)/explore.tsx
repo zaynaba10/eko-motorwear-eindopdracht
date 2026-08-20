@@ -82,9 +82,21 @@ export default function ZoekScherm() {
   }, [zoek, producten]);
 
   const aanHetZoeken = zoek.trim().length > 0;
-  const toonGeschiedenis = focus && !aanHetZoeken && geschiedenis.length > 0;
+  /* Zodra de zoekbalk openstaat en leeg is, komt de zoekgeschiedenis in beeld. */
+  const toonGeschiedenis = focus && !aanHetZoeken;
+
+  /** Bewaart de huidige zoekterm (vanaf twee tekens) in de geschiedenis. */
+  function onthoud() {
+    if (zoek.trim().length >= 2) bewaarZoekterm(zoek);
+  }
+
+  function leegVeld() {
+    onthoud();
+    setZoek('');
+  }
 
   function sluitZoeken() {
+    onthoud();
     setZoek('');
     setFocus(false);
     Keyboard.dismiss();
@@ -109,6 +121,13 @@ export default function ZoekScherm() {
               <Text style={styles.wissen}>Wissen</Text>
             </Pressable>
           </View>
+
+          {geschiedenis.length === 0 && (
+            <Text style={styles.geenGeschiedenis}>
+              Je hebt in deze sessie nog niets gezocht. Zoek op een merk, een productnaam of een
+              kleur — je zoekopdrachten komen hier te staan.
+            </Text>
+          )}
 
           {geschiedenis.map((term, i) => (
             <View key={`${term}-${i}`} style={styles.termRij}>
@@ -226,10 +245,10 @@ export default function ZoekScherm() {
             onChangeText={setZoek}
             onFocus={() => setFocus(true)}
             returnKeyType="search"
-            onSubmitEditing={() => bewaarZoekterm(zoek)}
+            onSubmitEditing={onthoud}
           />
           {aanHetZoeken ? (
-            <Pressable hitSlop={10} onPress={() => setZoek('')}>
+            <Pressable hitSlop={10} onPress={leegVeld}>
               <Ionicons name="close-circle" size={20} color={EkoColors.darkGray} />
             </Pressable>
           ) : (
@@ -287,6 +306,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textDecorationLine: 'underline',
     color: EkoColors.primaryDark,
+  },
+  geenGeschiedenis: {
+    fontFamily: EkoFonts.bodyRegular,
+    fontSize: 15,
+    lineHeight: 22,
+    color: EkoColors.paragraphGray,
+    paddingTop: 6,
   },
   termRij: {
     flexDirection: 'row',
