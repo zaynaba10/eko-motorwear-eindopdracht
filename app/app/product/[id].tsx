@@ -20,10 +20,13 @@ import { ProductCardData } from '@/components/product-card';
 import { ProductTegel } from '@/components/winkel/product-tegel';
 import { EkoColors, EkoFonts, EkoRadius } from '@/constants/eko-theme';
 import { laatstBekeken, markeerBekeken, verwijderBekeken } from '@/lib/laatst-bekeken';
+import { matenVoorSlug } from '@/lib/maten';
 import { parseRichText } from '@/lib/rich-text';
+import { staatOpVerlanglijst, useVerlanglijst, wisselVerlanglijst } from '@/lib/verlanglijst';
 import { fetchCategorieIds } from '@/lib/webflow-categories';
 import { fetchWebflowProducts } from '@/lib/webflow-products';
 import { HOOFDCATEGORIEEN, vindHoofdcategorie, vindSubcategorie } from '@/lib/winkel-boom';
+import { voegToeAanMand } from '@/lib/winkelmand';
 
 /**
  * Productpagina in warenhuisstijl: fotogalerij met bladeren, merk, naam en
@@ -32,15 +35,6 @@ import { HOOFDCATEGORIEEN, vindHoofdcategorie, vindSubcategorie } from '@/lib/wi
  * "Laatst bekeken" en "Bekijk meer", met onderaan een vaste
  * In winkelmand-knop.
  */
-
-/** Maten per hoofdcategorie, zoals in de winkel gevoerd. */
-const MATEN: Record<string, string[]> = {
-  motorkledij: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-  handschoenen: ['S', 'M', 'L', 'XL'],
-  helmet: ['XS', 'S', 'M', 'L', 'XL'],
-  laarzen: ['40', '41', '42', '43', '44', '45', '46'],
-  'protection-set': ['S', 'M', 'L', 'XL'],
-};
 
 function isSale(p: ProductCardData): boolean {
   return (
@@ -61,7 +55,6 @@ export default function ProductScherm() {
   const [laden, setLaden] = useState(true);
 
   const [fotoIndex, setFotoIndex] = useState(0);
-  const [favoriet, setFavoriet] = useState(false);
   const [maat, setMaat] = useState<string | null>(null);
   const [maatOpen, setMaatOpen] = useState(false);
   const [voorraadOpen, setVoorraadOpen] = useState(false);
@@ -83,7 +76,10 @@ export default function ProductScherm() {
     };
   }, []);
 
+  useVerlanglijst(); // laat de pagina meelezen met de gedeelde verlanglijst
+
   const product = producten.find((p) => p.id === id);
+  const favoriet = product ? staatOpVerlanglijst(product.id) : false;
 
   /* Bij welke categorieën hoort dit product (slugs uit de winkelboom)? */
   const eigenSlugs = useMemo(() => {
@@ -96,7 +92,7 @@ export default function ProductScherm() {
   const hoofd =
     eigenSlugs.map((s) => vindHoofdcategorie(s)).find(Boolean) ??
     (subcategorie ? vindHoofdcategorie(subcategorie.slug) : undefined);
-  const maten = hoofd ? MATEN[hoofd.slug] : undefined;
+  const maten = matenVoorSlug(hoofd?.slug);
 
   /* Laatst bekeken bijhouden. */
   useEffect(() => {
@@ -160,6 +156,7 @@ export default function ProductScherm() {
       setMaatOpen(true);
       return;
     }
+    voegToeAanMand(product!.id, maat ?? undefined);
     setToegevoegd(true);
     if (toegevoegdTimer.current) clearTimeout(toegevoegdTimer.current);
     toegevoegdTimer.current = setTimeout(() => setToegevoegd(false), 2000);
@@ -437,7 +434,7 @@ export default function ProductScherm() {
           <Pressable hitSlop={8} onPress={deel}>
             <Ionicons name="share-outline" size={20} color={EkoColors.primaryDark} />
           </Pressable>
-          <Pressable hitSlop={8} onPress={() => setFavoriet((v) => !v)}>
+          <Pressable hitSlop={8} onPress={() => product && wisselVerlanglijst(product.id)}>
             <Ionicons
               name={favoriet ? 'heart' : 'heart-outline'}
               size={20}

@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ProductCardData } from '@/components/product-card';
 import { EkoColors, EkoFonts, EkoRadius } from '@/constants/eko-theme';
+import { staatOpVerlanglijst, useVerlanglijst, wisselVerlanglijst } from '@/lib/verlanglijst';
 
 type ProductTegelProps = {
   product: ProductCardData;
@@ -18,7 +18,8 @@ type ProductTegelProps = {
  * daaronder merk, naam en prijs (met adviesprijs bij sale).
  */
 export function ProductTegel({ product, onPress, breedte }: ProductTegelProps) {
-  const [favoriet, setFavoriet] = useState(false);
+  useVerlanglijst(); // laat de tegel meelezen met de gedeelde verlanglijst
+  const favoriet = staatOpVerlanglijst(product.id);
   const sale =
     typeof product.vergelijkPrijsEuro === 'number' &&
     typeof product.priceEuro === 'number' &&
@@ -44,7 +45,7 @@ export function ProductTegel({ product, onPress, breedte }: ProductTegelProps) {
           hitSlop={10}
           onPress={(e) => {
             e.stopPropagation();
-            setFavoriet((v) => !v);
+            wisselVerlanglijst(product.id);
           }}>
           <Ionicons
             name={favoriet ? 'heart' : 'heart-outline'}

@@ -1,15 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { EkoColors } from '@/constants/eko-theme';
+import { EkoColors, EkoFonts } from '@/constants/eko-theme';
+import { useVerlanglijst } from '@/lib/verlanglijst';
+import { useWinkelmand } from '@/lib/winkelmand';
 
 /**
- * Zwevende tabbalk met alleen iconen. Het actieve icoon staat in een gevuld rondje,
- * naar het voorbeeld uit de referentie, in de EKO-huisstijl.
+ * Zwevende tabbalk met vijf iconen: home, zoeken, verlanglijst, winkelmand en
+ * profiel. Het actieve icoon staat in een gevuld rondje; verlanglijst en
+ * winkelmand tonen een telbolletje. Blog is geen apart tabblad meer — die staat
+ * op het startscherm in de sectie Inspiratie.
  */
 
 const BALK_HOOGTE = 62;
@@ -17,9 +21,11 @@ const BALK_HOOGTE = 62;
 function TabIcoon({
   naam,
   focused,
+  aantal,
 }: {
   naam: keyof typeof Ionicons.glyphMap;
   focused: boolean;
+  aantal?: number;
 }) {
   return (
     <View style={[styles.icoon, focused && styles.icoonAan]}>
@@ -28,6 +34,11 @@ function TabIcoon({
         size={22}
         color={focused ? EkoColors.white : EkoColors.primaryDark}
       />
+      {!!aantal && aantal > 0 && (
+        <View style={styles.bolletje}>
+          <Text style={styles.bolletjeTekst}>{aantal > 99 ? '99+' : aantal}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -35,6 +46,10 @@ function TabIcoon({
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const onder = Math.max(insets.bottom, 12);
+
+  const verlanglijst = useVerlanglijst();
+  const mand = useWinkelmand();
+  const mandAantal = mand.reduce((som, i) => som + i.aantal, 0);
 
   return (
     <Tabs
@@ -70,24 +85,38 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Shop',
-          tabBarIcon: ({ focused }) => <TabIcoon naam="bag-handle-outline" focused={focused} />,
+          title: 'Zoeken',
+          tabBarIcon: ({ focused }) => <TabIcoon naam="search-outline" focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="blog"
+        name="verlanglijst"
         options={{
-          title: 'Blog',
-          tabBarIcon: ({ focused }) => <TabIcoon naam="newspaper-outline" focused={focused} />,
+          title: 'Verlanglijst',
+          tabBarIcon: ({ focused }) => (
+            <TabIcoon naam="heart-outline" focused={focused} aantal={verlanglijst.length} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="winkelmand"
+        options={{
+          title: 'Winkelmand',
+          tabBarIcon: ({ focused }) => (
+            <TabIcoon naam="bag-handle-outline" focused={focused} aantal={mandAantal} />
+          ),
         }}
       />
       <Tabs.Screen
         name="account"
         options={{
-          title: 'Account',
+          title: 'Profiel',
           tabBarIcon: ({ focused }) => <TabIcoon naam="person-outline" focused={focused} />,
         }}
       />
+
+      {/* Blog blijft bereikbaar via Inspiratie op het startscherm, maar krijgt geen tabblad. */}
+      <Tabs.Screen name="blog" options={{ href: null }} />
     </Tabs>
   );
 }
@@ -101,4 +130,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   icoonAan: { backgroundColor: EkoColors.primaryDark },
+  bolletje: {
+    position: 'absolute',
+    top: -1,
+    right: -6,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    backgroundColor: EkoColors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bolletjeTekst: {
+    fontFamily: EkoFonts.bodyBold,
+    fontSize: 11,
+    color: EkoColors.white,
+  },
 });
