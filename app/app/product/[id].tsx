@@ -58,6 +58,9 @@ export default function ProductScherm() {
   const [maat, setMaat] = useState<string | null>(null);
   const [maatOpen, setMaatOpen] = useState(false);
   const [voorraadOpen, setVoorraadOpen] = useState(false);
+  const [galerijOpen, setGalerijOpen] = useState(false);
+  const [grootIndex, setGrootIndex] = useState(0);
+  const groteLijst = useRef<FlatList<string>>(null);
   const [openBlok, setOpenBlok] = useState<string | null>(null);
   const [toegevoegd, setToegevoegd] = useState(false);
   const [tik, verversTik] = useState(0);
@@ -180,14 +183,20 @@ export default function ProductScherm() {
               setFotoIndex(Math.round(e.nativeEvent.contentOffset.x / schermBreedte))
             }
             renderItem={({ item }) => (
-              <View style={[styles.fotoVlak, { width: schermBreedte }]}>
+              <Pressable
+                style={[styles.fotoVlak, { width: schermBreedte }]}
+                accessibilityLabel="Foto vergroten"
+                onPress={() => {
+                  setGrootIndex(fotoIndex);
+                  setGalerijOpen(true);
+                }}>
                 <Image
                   source={{ uri: item }}
                   style={styles.foto}
                   contentFit="contain"
                   transition={150}
                 />
-              </View>
+              </Pressable>
             )}
             ListEmptyComponent={
               <View style={[styles.fotoVlak, styles.fotoLeeg, { width: schermBreedte }]}>
@@ -473,6 +482,70 @@ export default function ProductScherm() {
           </Text>
         </Pressable>
       </View>
+
+      {/* Schermvullende fotogalerij */}
+      <Modal
+        visible={galerijOpen}
+        animationType="fade"
+        onRequestClose={() => setGalerijOpen(false)}>
+        <View style={styles.galerij}>
+          <View style={[styles.galerijKop, { paddingTop: insets.top + 6 }]}>
+            <Pressable
+              style={styles.rondeKnop}
+              accessibilityLabel="Sluiten"
+              onPress={() => setGalerijOpen(false)}>
+              <Ionicons name="close" size={22} color={EkoColors.primaryDark} />
+            </Pressable>
+          </View>
+
+          <FlatList
+            ref={groteLijst}
+            data={fotos}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(uri, i) => `groot-${i}-${uri}`}
+            initialScrollIndex={grootIndex}
+            getItemLayout={(_, i) => ({
+              length: schermBreedte,
+              offset: schermBreedte * i,
+              index: i,
+            })}
+            onMomentumScrollEnd={(e) =>
+              setGrootIndex(Math.round(e.nativeEvent.contentOffset.x / schermBreedte))
+            }
+            renderItem={({ item }) => (
+              <View style={[styles.grooteFotoVlak, { width: schermBreedte }]}>
+                <Image source={{ uri: item }} style={styles.foto} contentFit="contain" />
+              </View>
+            )}
+          />
+
+          {fotos.length > 1 && (
+            <View style={[styles.duimBalk, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.duimRij}>
+                {fotos.map((uri, i) => (
+                  <Pressable
+                    key={`duim-${i}-${uri}`}
+                    accessibilityLabel={`Foto ${i + 1}`}
+                    onPress={() => {
+                      setGrootIndex(i);
+                      groteLijst.current?.scrollToIndex({ index: i, animated: true });
+                    }}>
+                    <View style={styles.duimVlak}>
+                      <Image source={{ uri }} style={styles.duim} contentFit="contain" />
+                    </View>
+                    <View style={[styles.duimStreep, i === grootIndex && styles.duimStreepAan]} />
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+        </View>
+      </Modal>
 
       {/* Onderschuifpaneel: maat kiezen */}
       <Modal
@@ -791,6 +864,46 @@ const styles = StyleSheet.create({
     fontFamily: EkoFonts.bodyMedium,
     fontSize: 13,
     color: EkoColors.primaryDark,
+  },
+  galerij: {
+    flex: 1,
+    backgroundColor: EkoColors.white,
+  },
+  galerijKop: {
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    alignItems: 'flex-start',
+  },
+  grooteFotoVlak: {
+    flex: 1,
+    backgroundColor: '#F4F4F2',
+    justifyContent: 'center',
+  },
+  duimBalk: {
+    paddingTop: 12,
+    backgroundColor: EkoColors.white,
+  },
+  duimRij: {
+    paddingHorizontal: 12,
+    gap: 8,
+  },
+  duimVlak: {
+    width: 84,
+    height: 104,
+    backgroundColor: '#F4F4F2',
+    padding: 6,
+  },
+  duim: {
+    width: '100%',
+    height: '100%',
+  },
+  duimStreep: {
+    height: 3,
+    marginTop: 4,
+    backgroundColor: 'transparent',
+  },
+  duimStreepAan: {
+    backgroundColor: EkoColors.primaryDark,
   },
   kopOverlay: {
     position: 'absolute',
