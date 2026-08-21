@@ -19,6 +19,8 @@ export type Gebruiker = {
   straat?: string;
   huisnummer?: string;
   bus?: string;
+  bedrijf?: string;
+  btw?: string;
 };
 
 type Account = {
@@ -94,6 +96,38 @@ export function registreer(wachtwoord: string, gegevens: Gebruiker) {
   accounts.set(sleutel, { wachtwoord, gegevens: { ...gegevens, email: sleutel } });
   ingelogd = { ...gegevens, email: sleutel };
   meld();
+}
+
+/**
+ * Gegevens van de ingelogde gebruiker bijwerken. Wijzigt het e-mailadres mee
+ * als sleutel van het account, zodat je met het nieuwe adres kan inloggen.
+ */
+export function werkBij(velden: Partial<Gebruiker>) {
+  if (!ingelogd) return;
+  const oudeSleutel = ingelogd.email;
+  const account = accounts.get(oudeSleutel);
+  const wachtwoord = account?.wachtwoord ?? '';
+
+  const bijgewerkt: Gebruiker = { ...ingelogd, ...velden };
+  const nieuweSleutel = (velden.email ?? oudeSleutel).trim().toLowerCase();
+  bijgewerkt.email = nieuweSleutel;
+
+  if (nieuweSleutel !== oudeSleutel) accounts.delete(oudeSleutel);
+  accounts.set(nieuweSleutel, { wachtwoord, gegevens: bijgewerkt });
+  ingelogd = bijgewerkt;
+  meld();
+}
+
+/** Wachtwoord wijzigen van de ingelogde gebruiker. */
+export function wijzigWachtwoord(huidig: string, nieuw: string): { ok: boolean; fout?: string } {
+  if (!ingelogd) return { ok: false, fout: 'Je bent niet ingelogd.' };
+  const account = accounts.get(ingelogd.email);
+  if (!account || account.wachtwoord !== huidig)
+    return { ok: false, fout: 'Je huidige wachtwoord klopt niet.' };
+  const regelFout = wachtwoordFout(nieuw);
+  if (regelFout) return { ok: false, fout: regelFout };
+  accounts.set(ingelogd.email, { ...account, wachtwoord: nieuw });
+  return { ok: true };
 }
 
 /** Uitloggen. */
