@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ProductCardData } from '@/components/product-card';
 import { EkoColors, EkoFonts, EkoRadius } from '@/constants/eko-theme';
+import { prijsKort } from '@/lib/format';
 import { staatOpVerlanglijst, useVerlanglijst, wisselVerlanglijst } from '@/lib/verlanglijst';
 
 type ProductTegelProps = {
@@ -29,7 +30,7 @@ export function ProductTegel({ product, onPress, breedte }: ProductTegelProps) {
     <Pressable style={[styles.tegel, breedte ? { width: breedte } : styles.tegelFlex]} onPress={onPress}>
       <View style={styles.fotoVlak}>
         {product.imageUrl ? (
-          <Image source={{ uri: product.imageUrl }} style={styles.foto} contentFit="cover" />
+          <Image source={{ uri: product.imageUrl }} style={styles.foto} contentFit="contain" />
         ) : (
           <View style={[styles.foto, styles.fotoLeeg]}>
             <Ionicons name="image-outline" size={32} color={EkoColors.darkGray} />
@@ -61,10 +62,10 @@ export function ProductTegel({ product, onPress, breedte }: ProductTegelProps) {
       {typeof product.priceEuro === 'number' && (
         <View style={styles.prijsRij}>
           {sale && (
-            <Text style={styles.adviesPrijs}>€ {product.vergelijkPrijsEuro!.toFixed(2)}</Text>
+            <Text style={styles.adviesPrijs}>{prijsKort(product.vergelijkPrijsEuro!)}</Text>
           )}
           <Text style={[styles.prijs, sale && styles.prijsSale]}>
-            € {product.priceEuro.toFixed(2)}
+            {prijsKort(product.priceEuro)}
           </Text>
         </View>
       )}
@@ -81,9 +82,9 @@ const styles = StyleSheet.create({
     width: undefined,
   },
   fotoVlak: {
-    borderRadius: EkoRadius.card,
     overflow: 'hidden',
-    backgroundColor: EkoColors.lightGray,
+    backgroundColor: '#F4F4F2',
+    padding: 10,
     marginBottom: 10,
   },
   foto: {
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
   },
   merk: {
     fontFamily: EkoFonts.headingMedium,
-    fontSize: 13,
+    fontSize: 12,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     color: EkoColors.primaryDark,
@@ -130,8 +131,8 @@ const styles = StyleSheet.create({
   },
   naam: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 14,
-    lineHeight: 19,
+    fontSize: 13,
+    lineHeight: 18,
     color: EkoColors.paragraphGray,
     marginBottom: 4,
   },
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
   },
   prijs: {
     fontFamily: EkoFonts.bodyBold,
-    fontSize: 14,
+    fontSize: 13,
     color: EkoColors.primaryDark,
   },
   prijsSale: {
@@ -150,7 +151,7 @@ const styles = StyleSheet.create({
   },
   adviesPrijs: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 13,
+    fontSize: 12,
     color: EkoColors.darkGray,
     textDecorationLine: 'line-through',
   },

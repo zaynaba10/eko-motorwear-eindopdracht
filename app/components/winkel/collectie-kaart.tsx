@@ -46,7 +46,7 @@ export function CollectieKaart({
       onPress={onPress}>
       <View style={styles.fotoVlak}>
         {product.imageUrl ? (
-          <Image source={{ uri: product.imageUrl }} style={styles.foto} contentFit="cover" />
+          <Image source={{ uri: product.imageUrl }} style={styles.foto} contentFit="contain" />
         ) : (
           <View style={[styles.foto, styles.fotoLeeg]}>
             <Ionicons name="image-outline" size={30} color={EkoColors.darkGray} />
@@ -108,6 +108,7 @@ const styles = StyleSheet.create({
   },
   fotoVlak: {
     backgroundColor: '#F4F4F2',
+    padding: 10,
     marginBottom: 12,
   },
   foto: {
@@ -138,14 +139,14 @@ const styles = StyleSheet.create({
   },
   merk: {
     fontFamily: EkoFonts.headingBold,
-    fontSize: 18,
+    fontSize: 16,
     letterSpacing: 0.3,
     color: EkoColors.primaryDark,
     marginBottom: 2,
   },
   naam: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 14,
+    fontSize: 13,
     color: EkoColors.paragraphGray,
     marginBottom: 6,
   },
@@ -156,7 +157,7 @@ const styles = StyleSheet.create({
   },
   prijs: {
     fontFamily: EkoFonts.bodyBold,
-    fontSize: 15,
+    fontSize: 14,
     color: EkoColors.primaryDark,
   },
   prijsSale: {
