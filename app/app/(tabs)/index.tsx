@@ -19,6 +19,7 @@ import { EkoColors, EkoFonts } from '@/constants/eko-theme';
 import { datumKort } from '@/lib/format';
 import { laatstBekeken, verwijderBekeken } from '@/lib/laatst-bekeken';
 import { BlogDetails, fetchWebflowBlogs } from '@/lib/webflow-blogs';
+import { MERKEN_MET_LOGO } from '@/lib/merken';
 import { fetchWebflowProducts } from '@/lib/webflow-products';
 import { HOOFDCATEGORIEEN } from '@/lib/winkel-boom';
 
@@ -87,7 +88,6 @@ export default function WinkelStartScherm() {
   const [afdeling, setAfdeling] = useState('Alles');
   const [afdelingOpen, setAfdelingOpen] = useState(false);
   const [bekekenIds, setBekekenIds] = useState<string[]>(laatstBekeken());
-  const [actiefMerk, setActiefMerk] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([fetchWebflowProducts(), fetchWebflowBlogs()])
@@ -113,19 +113,9 @@ export default function WinkelStartScherm() {
     [producten, afdeling]
   );
 
-  const merken = useMemo(() => {
-    const gevonden = producten.map((p) => p.merk).filter(Boolean) as string[];
-    return Array.from(new Set(gevonden)).slice(0, 8);
-  }, [producten]);
-
-  useEffect(() => {
-    if (!actiefMerk && merken.length > 0) setActiefMerk(merken[0]);
-  }, [merken, actiefMerk]);
-
   /* Producten met "feature on home" aan in Webflow krijgen voorrang. */
   const uitgelicht = zichtbaar.filter((p) => p.uitgelicht);
   const nieuweCollectie = (uitgelicht.length > 0 ? uitgelicht : zichtbaar).slice(0, 4);
-  const merkProducten = producten.filter((p) => p.merk === actiefMerk).slice(0, 8);
   const inspiratie = blogs.slice(0, 4);
 
   const bekeken = bekekenIds
@@ -262,41 +252,38 @@ export default function WinkelStartScherm() {
         )}
 
         {/* --------------------------------------------------- onze merken */}
-        {merken.length > 0 && (
-          <View style={styles.sectieLicht}>
-            <SectieKop titel="Onze merken" onMeer={() => router.push('/explore')} />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.chipsRij}>
-              {merken.map((m) => {
-                const aan = m === actiefMerk;
-                return (
-                  <Pressable
-                    key={m}
-                    style={[styles.chip, aan && styles.chipAan]}
-                    onPress={() => setActiefMerk(m)}>
-                    <Text style={[styles.chipTekst, aan && styles.chipTekstAan]}>{m}</Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+        <View style={styles.sectieLicht}>
+          <SectieKop titel="Onze merken" onMeer={() => router.push('/merken')} />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.rij}>
+            {MERKEN_MET_LOGO.slice(0, 12).map((m) => (
+              <Pressable
+                key={m.naam}
+                style={styles.merkTegel}
+                accessibilityLabel={`Producten van ${m.naam}`}
+                onPress={() => router.push(`/zoeken/${encodeURIComponent(m.naam)}`)}>
+                <View style={styles.merkLogoVlak}>
+                  <Image source={{ uri: m.logo }} style={styles.merkLogo} contentFit="contain" />
+                </View>
+                <Text style={styles.merkNaam} numberOfLines={1}>
+                  {m.naam}
+                </Text>
+              </Pressable>
+            ))}
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={[styles.rij, { paddingTop: 18 }]}>
-              {merkProducten.map((p) => (
-                <CollectieKaart
-                  key={p.id}
-                  product={p}
-                  breedte={170}
-                  onPress={() => naarProduct(p.id)}
-                />
-              ))}
-            </ScrollView>
-          </View>
-        )}
+            <Pressable
+              style={styles.merkTegel}
+              accessibilityLabel="Alle merken bekijken"
+              onPress={() => router.push('/merken')}>
+              <View style={[styles.merkLogoVlak, styles.meerVlak]}>
+                <Ionicons name="arrow-forward" size={22} color={EkoColors.white} />
+              </View>
+              <Text style={[styles.merkNaam, styles.meerNaam]}>Meer</Text>
+            </Pressable>
+          </ScrollView>
+        </View>
 
         {/* ---------------------------------------------- merkcampagnes */}
         <View style={styles.sectie}>
@@ -485,6 +472,36 @@ const styles = StyleSheet.create({
   },
 
   /* MERKEN */
+  merkTegel: {
+    width: 108,
+  },
+  merkLogoVlak: {
+    height: 72,
+    backgroundColor: EkoColors.white,
+    borderWidth: 1,
+    borderColor: 'rgba(22,35,46,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+  },
+  merkLogo: {
+    width: '100%',
+    height: '100%',
+  },
+  meerVlak: {
+    backgroundColor: EkoColors.primaryDark,
+    borderColor: EkoColors.primaryDark,
+  },
+  merkNaam: {
+    marginTop: 8,
+    fontFamily: EkoFonts.bodyMedium,
+    fontSize: 12,
+    textAlign: 'center',
+    color: EkoColors.primaryDark,
+  },
+  meerNaam: {
+    fontFamily: EkoFonts.bodyBold,
+  },
   chipsRij: {
     paddingHorizontal: RAND,
     gap: 10,
