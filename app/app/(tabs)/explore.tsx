@@ -140,12 +140,18 @@ export default function ZoekScherm() {
   }
 
   const balkOnder = toetsenbord > 0 ? Math.max(10, toetsenbord - TABBALK_RUIMTE + 8) : 10;
+  /* Ruimte onder de lijst, zodat je tijdens het typen tot onderaan kan scrollen. */
+  const onderRuimte = balkOnder + 90;
 
   return (
     <View style={[styles.scherm, { paddingTop: insets.top + 8 }]}>
       {toonGeschiedenis ? (
         /* ---------------------------------------------- zoekgeschiedenis */
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.geschiedenis}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="none"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.geschiedenis, { paddingBottom: onderRuimte }]}>
           <View style={styles.geschiedenisKop}>
             <Text style={styles.geschiedenisTitel}>Zoekgeschiedenis</Text>
             <Pressable hitSlop={10} onPress={wisZoekgeschiedenis}>
@@ -176,7 +182,11 @@ export default function ZoekScherm() {
         </ScrollView>
       ) : aanHetZoeken ? (
         /* ------------------------------- suggesties tijdens het typen */
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.suggesties}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="none"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.suggesties, { paddingBottom: onderRuimte }]}>
           <Text style={styles.sectieKop}>Vaak gezocht</Text>
           {suggesties.map((term) => (
             <Pressable key={term} style={styles.suggestieRij} onPress={() => zoekOp(term)}>
@@ -239,7 +249,7 @@ export default function ZoekScherm() {
                     key={s.slug}
                     naam={s.naam}
                     foto={s.foto}
-                    breedte={150}
+                    breedte={130}
                     onPress={() => router.push(`/lijst/${s.slug}`)}
                   />
                 ))}
@@ -333,7 +343,7 @@ const styles = StyleSheet.create({
   },
   geschiedenisTitel: {
     fontFamily: EkoFonts.headingBold,
-    fontSize: 24,
+    fontSize: 20,
     letterSpacing: 0.3,
     color: EkoColors.primaryDark,
   },
@@ -345,7 +355,7 @@ const styles = StyleSheet.create({
   },
   geenGeschiedenis: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 15,
+    fontSize: 14,
     lineHeight: 22,
     color: EkoColors.paragraphGray,
     paddingTop: 6,
@@ -358,11 +368,11 @@ const styles = StyleSheet.create({
   },
   termTekstVlak: {
     flex: 1,
-    paddingVertical: 20,
+    paddingVertical: 15,
   },
   termTekst: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 17,
+    fontSize: 15,
     color: EkoColors.primaryDark,
   },
 
@@ -373,8 +383,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   chip: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: EkoRadius.pill,
     borderWidth: 1,
     borderColor: EkoColors.lightSteelBlue,
@@ -386,7 +396,7 @@ const styles = StyleSheet.create({
   },
   chipTekst: {
     fontFamily: EkoFonts.bodyMedium,
-    fontSize: 15,
+    fontSize: 14,
     color: EkoColors.primaryDark,
   },
   chipTekstAan: {
@@ -396,20 +406,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 4,
     paddingBottom: 8,
-    gap: 14,
+    gap: 12,
   },
   lijstGroep: {
     marginTop: 28,
     paddingHorizontal: 16,
   },
   lijstRij: {
-    paddingVertical: 18,
+    paddingVertical: 15,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: EkoColors.lightSteelBlue,
   },
   lijstRijTekst: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 17,
+    fontSize: 15,
     color: EkoColors.primaryDark,
   },
 
@@ -421,7 +431,7 @@ const styles = StyleSheet.create({
   },
   sectieKop: {
     fontFamily: EkoFonts.headingBold,
-    fontSize: 24,
+    fontSize: 20,
     letterSpacing: 0.3,
     color: EkoColors.primaryDark,
     paddingBottom: 14,
@@ -430,18 +440,18 @@ const styles = StyleSheet.create({
     paddingTop: 36,
   },
   suggestieRij: {
-    paddingVertical: 18,
+    paddingVertical: 15,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: EkoColors.lightSteelBlue,
   },
   suggestieTekst: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 17,
+    fontSize: 15,
     color: EkoColors.primaryDark,
   },
   kruimel: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 15,
+    fontSize: 13,
     color: EkoColors.paragraphGray,
     marginTop: 6,
   },
@@ -462,8 +472,8 @@ const styles = StyleSheet.create({
     gap: 10,
     backgroundColor: EkoColors.white,
     borderRadius: EkoRadius.pill,
-    paddingHorizontal: 18,
-    height: 56,
+    paddingHorizontal: 16,
+    height: 48,
     shadowColor: EkoColors.primaryDark,
     shadowOpacity: 0.12,
     shadowRadius: 16,
@@ -473,14 +483,14 @@ const styles = StyleSheet.create({
   zoekVeld: {
     flex: 1,
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 16,
+    fontSize: 15,
     color: EkoColors.primaryDark,
     paddingVertical: 0,
   },
   sluitKnop: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: EkoColors.white,
