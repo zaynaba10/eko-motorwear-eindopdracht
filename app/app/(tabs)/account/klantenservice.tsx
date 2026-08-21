@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+
 import { Groep, MenuRij, Scherm } from '@/components/account-ui';
 
 export default function Klantenservice() {
@@ -6,6 +7,12 @@ export default function Klantenservice() {
   return (
     <Scherm titel="Klantenservice">
       <Groep>
+        <MenuRij
+          icoon="create-outline"
+          label="Stuur ons een bericht"
+          extra={'Naam, e-mail, je vraag en eventueel een bijlage\nAntwoord binnen één werkdag'}
+          onPress={() => router.push('/account/klantenservice-bericht')}
+        />
         <MenuRij
           icoon="chatbubble-ellipses-outline"
           label="Chat"
