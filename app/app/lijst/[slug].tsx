@@ -218,9 +218,29 @@ export default function LijstScherm() {
         </Pressable>
       </View>
 
-      {/* Artikeltypes van deze subcategorie als chips */}
-      {types && (
-        <View>
+      {/* Balk met subcategorieën (hoofdcategorie) of artikeltypes (subcategorie) */}
+      {isHoofdLijst && hoofd!.subs.length > 0 && (
+        <View style={styles.chipsBalk}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.typeRij}>
+            {hoofd!.subs.map((sub) => (
+              <Pressable
+                key={sub.slug}
+                style={styles.typeChip}
+                onPress={() => router.push(`/lijst/${sub.slug}`)}>
+                <Text style={styles.typeChipTekst} numberOfLines={1}>
+                  {sub.naam}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
+      {!isHoofdLijst && types && (
+        <View style={styles.chipsBalk}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -232,7 +252,11 @@ export default function LijstScherm() {
                   key={naam}
                   style={[styles.typeChip, aan && styles.typeChipAan]}
                   onPress={() => setTypeFilter(aan ? null : naam)}>
-                  <Text style={[styles.typeChipTekst, aan && styles.typeChipTekstAan]}>{naam}</Text>
+                  <Text
+                    style={[styles.typeChipTekst, aan && styles.typeChipTekstAan]}
+                    numberOfLines={1}>
+                    {naam}
+                  </Text>
                 </Pressable>
               );
             })}
@@ -253,9 +277,9 @@ export default function LijstScherm() {
           data={zichtbaar}
           keyExtractor={(item) => item.id}
           numColumns={2}
-          columnWrapperStyle={{ gap: 16, paddingHorizontal: 16 }}
-          ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
-          contentContainerStyle={{ paddingTop: 12, paddingBottom: 60 }}
+          columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}
+          ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
+          contentContainerStyle={{ paddingTop: 10, paddingBottom: 60 }}
           renderItem={({ item }) => (
             <ProductTegel product={item} onPress={() => router.push(`/product/${item.id}`)} />
           )}
@@ -469,18 +493,23 @@ const styles = StyleSheet.create({
     color: EkoColors.paragraphGray,
     marginTop: 1,
   },
+  chipsBalk: { flexGrow: 0, flexShrink: 0 },
   typeRij: {
     paddingHorizontal: 16,
     paddingTop: 6,
-    paddingBottom: 4,
+    paddingBottom: 6,
     gap: 10,
+    alignItems: 'center',
   },
   typeChip: {
+    flexGrow: 0,
+    flexShrink: 0,
     borderWidth: 1,
-    borderColor: EkoColors.primaryDark,
+    borderColor: EkoColors.lightSteelBlue,
     backgroundColor: EkoColors.white,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    height: 40,
+    justifyContent: 'center',
     borderRadius: EkoRadius.small,
   },
   typeChipAan: {
@@ -488,7 +517,7 @@ const styles = StyleSheet.create({
   },
   typeChipTekst: {
     fontFamily: EkoFonts.bodyMedium,
-    fontSize: 14,
+    fontSize: 13,
     color: EkoColors.primaryDark,
   },
   typeChipTekstAan: {
