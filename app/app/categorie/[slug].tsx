@@ -1,22 +1,29 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProductCardData } from '@/components/product-card';
 import { CategorieTegel } from '@/components/winkel/categorie-tegel';
 import { ProductTegel } from '@/components/winkel/product-tegel';
-import { EkoColors, EkoFonts, EkoRadius } from '@/constants/eko-theme';
+import { SectieKop } from '@/components/winkel/sectie-kop';
+import { EkoColors, EkoFonts } from '@/constants/eko-theme';
+import { MERKEN_MET_LOGO } from '@/lib/merken';
 import { fetchCategorieIds } from '@/lib/webflow-categories';
 import { fetchWebflowProducts } from '@/lib/webflow-products';
-import { MERKEN, vindHoofdcategorie } from '@/lib/winkel-boom';
+import { vindHoofdcategorie } from '@/lib/winkel-boom';
 
 /**
- * Hoofdcategoriepagina in warenhuisstijl (zelfde structuur als op de website):
- * bovenaan een tegeloverzicht van alle subcategorieën, daaronder de merken en
- * de bestsellers van deze categorie.
+ * Hoofdcategoriepagina, opgebouwd zoals de rest van de app: een raster met de
+ * subcategorieën, de merklogo's en de bestsellers van deze categorie.
  */
+
+const { width: BREEDTE } = Dimensions.get('window');
+const RAND = 16;
+const KOLOM = (BREEDTE - RAND * 2 - 12) / 2;
+
 export default function CategorieScherm() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const router = useRouter();
@@ -40,9 +47,7 @@ export default function CategorieScherm() {
   const eigenProducten = useMemo(() => {
     if (!hoofd) return [];
     const ids = new Set(
-      [hoofd.slug, ...hoofd.subs.map((s) => s.slug)]
-        .map((s) => catIds[s])
-        .filter(Boolean)
+      [hoofd.slug, ...hoofd.subs.map((s) => s.slug)].map((s) => catIds[s]).filter(Boolean)
     );
     if (!ids.size) return [];
     return producten.filter((p) => (p.categorieIds || []).some((id) => ids.has(id)));
@@ -65,73 +70,98 @@ export default function CategorieScherm() {
 
       {/* Kop: terugknop links, titel gecentreerd */}
       <View style={[styles.kop, { paddingTop: insets.top + 6 }]}>
-        <Pressable style={styles.terugKnop} onPress={() => router.back()}>
+        <Pressable style={styles.rondeKnop} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={22} color={EkoColors.primaryDark} />
         </Pressable>
-        <Text style={styles.kopTitel}>{hoofd.naam}</Text>
-        <View style={styles.terugKnopRuimte} />
+        <View style={styles.kopMidden}>
+          <Text style={styles.kopTitel} numberOfLines={1}>
+            {hoofd.naam}
+          </Text>
+          <Text style={styles.kopAantal}>
+            {eigenProducten.length} {eigenProducten.length === 1 ? 'artikel' : 'artikelen'}
+          </Text>
+        </View>
+        <View style={styles.rondeKnop} />
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
-        {/* Sectietitel met pijl naar het volledige overzicht */}
-        <Pressable
-          style={styles.sectieKopRij}
-          onPress={() => router.push(`/lijst/${hoofd.slug}?alles=1`)}>
-          <Text style={styles.sectieKop}>{hoofd.naam}</Text>
-          <Ionicons name="arrow-forward" size={24} color={EkoColors.primaryDark} />
-        </Pressable>
-
-        {/* Tegels van alle subcategorieën */}
-        <View style={styles.tegelRooster}>
-          {hoofd.subs.map((s) => (
-            <View key={s.slug} style={styles.tegelCel}>
-              <CategorieTegel
-                naam={s.naam}
-                foto={s.foto}
-                onPress={() => router.push(`/lijst/${s.slug}`)}
-              />
-            </View>
-          ))}
-        </View>
-
-        <Pressable
-          style={styles.allesKnop}
-          onPress={() => router.push(`/lijst/${hoofd.slug}?alles=1`)}>
-          <Text style={styles.allesKnopTekst}>
-            Bekijk alle {hoofd.naam.toLowerCase()} ({eigenProducten.length})
-          </Text>
-        </Pressable>
-
-        {/* Merken */}
-        <View style={styles.merkenSectie}>
-          <Text style={styles.sectieKop}>Onze merken</Text>
-          <View style={styles.merkenRooster}>
-            {MERKEN.map((m) => (
-              <View key={m} style={styles.merkTegel}>
-                <Text style={styles.merkTekst}>{m}</Text>
+      <ScrollView contentContainerStyle={{ paddingBottom: 50 }} showsVerticalScrollIndicator={false}>
+        {/* --------------------------------------------- subcategorieën */}
+        <View style={styles.sectie}>
+          <SectieKop
+            titel={hoofd.naam}
+            onMeer={() => router.push(`/lijst/${hoofd.slug}?alles=1`)}
+          />
+          <View style={styles.raster}>
+            {hoofd.subs.map((s) => (
+              <View key={s.slug} style={{ width: KOLOM }}>
+                <CategorieTegel
+                  naam={s.naam}
+                  foto={s.foto}
+                  onPress={() => router.push(`/lijst/${s.slug}`)}
+                />
               </View>
             ))}
           </View>
+
+          <Pressable
+            style={styles.allesKnop}
+            onPress={() => router.push(`/lijst/${hoofd.slug}?alles=1`)}>
+            <Text style={styles.allesKnopTekst}>
+              Bekijk alle {hoofd.naam.toLowerCase()} ({eigenProducten.length})
+            </Text>
+          </Pressable>
         </View>
 
-        {/* Bestsellers */}
-        {bestsellers.length > 0 && (
-          <View style={styles.bestsellersSectie}>
+        {/* ---------------------------------------------- merken (logo's) */}
+        <View style={styles.sectieLicht}>
+          <SectieKop titel="Onze merken" onMeer={() => router.push('/merken')} />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.rij}>
+            {MERKEN_MET_LOGO.slice(0, 12).map((m) => (
+              <Pressable
+                key={m.naam}
+                style={styles.merkTegel}
+                accessibilityLabel={`Producten van ${m.naam}`}
+                onPress={() => router.push(`/zoeken/${encodeURIComponent(m.naam)}`)}>
+                <View style={styles.merkLogoVlak}>
+                  <Image source={{ uri: m.logo }} style={styles.merkLogo} contentFit="contain" />
+                </View>
+                <Text style={styles.merkNaam} numberOfLines={1}>
+                  {m.naam}
+                </Text>
+              </Pressable>
+            ))}
+
             <Pressable
-              style={styles.sectieKopRij}
-              onPress={() => router.push(`/lijst/${hoofd.slug}?alles=1`)}>
-              <Text style={styles.sectieKop}>Bestsellers</Text>
-              <Ionicons name="arrow-forward" size={24} color={EkoColors.primaryDark} />
+              style={styles.merkTegel}
+              accessibilityLabel="Alle merken bekijken"
+              onPress={() => router.push('/merken')}>
+              <View style={[styles.merkLogoVlak, styles.meerVlak]}>
+                <Ionicons name="arrow-forward" size={22} color={EkoColors.white} />
+              </View>
+              <Text style={[styles.merkNaam, styles.meerNaam]}>Meer</Text>
             </Pressable>
+          </ScrollView>
+        </View>
+
+        {/* ------------------------------------------------- bestsellers */}
+        {bestsellers.length > 0 && (
+          <View style={styles.sectie}>
+            <SectieKop
+              titel="Bestsellers"
+              onMeer={() => router.push(`/lijst/${hoofd.slug}?alles=1`)}
+            />
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.bestsellersRij}>
+              contentContainerStyle={styles.rij}>
               {bestsellers.map((p) => (
                 <ProductTegel
                   key={p.id}
                   product={p}
-                  breedte={170}
+                  breedte={160}
                   onPress={() => router.push(`/product/${p.id}`)}
                 />
               ))}
@@ -144,120 +174,92 @@ export default function CategorieScherm() {
 }
 
 const styles = StyleSheet.create({
-  scherm: {
-    flex: 1,
-    backgroundColor: EkoColors.white,
-  },
+  scherm: { flex: 1, backgroundColor: EkoColors.white },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: EkoColors.white,
   },
-  kop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-  },
-  terugKnop: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: EkoColors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: EkoColors.primaryDark,
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-  },
-  terugKnopRuimte: {
-    width: 42,
-  },
-  kopTitel: {
-    flex: 1,
-    textAlign: 'center',
-    fontFamily: EkoFonts.headingMedium,
-    fontSize: 17,
-    letterSpacing: 0.5,
-    color: EkoColors.primaryDark,
-  },
-  sectieKopRij: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 14,
-  },
-  sectieKop: {
-    fontFamily: EkoFonts.headingBold,
-    fontSize: 26,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: EkoColors.primaryDark,
-  },
-  tegelRooster: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    columnGap: 16,
-    rowGap: 24,
-  },
-  tegelCel: {
-    width: '47%',
-    flexGrow: 1,
-  },
-  allesKnop: {
-    marginTop: 28,
-    marginHorizontal: 16,
-    backgroundColor: EkoColors.primaryDark,
-    borderRadius: EkoRadius.pill,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  allesKnopTekst: {
-    fontFamily: EkoFonts.headingMedium,
-    fontSize: 13,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: EkoColors.white,
-  },
-  merkenSectie: {
-    marginTop: 36,
-    backgroundColor: EkoColors.lightGray,
-    paddingBottom: 20,
-  },
-  merkenRooster: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    gap: 10,
-  },
-  merkTegel: {
-    backgroundColor: EkoColors.white,
-    borderRadius: EkoRadius.tag,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  merkTekst: {
-    fontFamily: EkoFonts.headingMedium,
-    fontSize: 13,
-    letterSpacing: 0.5,
-    color: EkoColors.primaryDark,
-  },
-  bestsellersSectie: {
-    marginTop: 8,
-  },
-  bestsellersRij: {
-    paddingHorizontal: 16,
-    gap: 14,
-  },
   leegTekst: {
     fontFamily: EkoFonts.bodyRegular,
     fontSize: 15,
     color: EkoColors.paragraphGray,
   },
+
+  kop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+    gap: 8,
+  },
+  rondeKnop: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: EkoColors.lightGray,
+  },
+  kopMidden: { flex: 1, alignItems: 'center' },
+  kopTitel: {
+    fontFamily: EkoFonts.headingBold,
+    fontSize: 17,
+    letterSpacing: 0.3,
+    color: EkoColors.primaryDark,
+  },
+  kopAantal: {
+    fontFamily: EkoFonts.bodyRegular,
+    fontSize: 12,
+    color: EkoColors.paragraphGray,
+    marginTop: 2,
+  },
+
+  sectie: { paddingTop: 26, paddingBottom: 30, backgroundColor: EkoColors.white },
+  sectieLicht: { paddingTop: 26, paddingBottom: 30, backgroundColor: EkoColors.lightGray },
+  rij: { paddingHorizontal: RAND, gap: 12 },
+  raster: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: RAND,
+    gap: 12,
+  },
+
+  allesKnop: {
+    marginTop: 26,
+    marginHorizontal: RAND,
+    backgroundColor: EkoColors.primaryDark,
+    paddingVertical: 15,
+    alignItems: 'center',
+  },
+  allesKnopTekst: {
+    fontFamily: EkoFonts.bodyBold,
+    fontSize: 15,
+    color: EkoColors.white,
+  },
+
+  merkTegel: { width: 108 },
+  merkLogoVlak: {
+    height: 72,
+    backgroundColor: EkoColors.white,
+    borderWidth: 1,
+    borderColor: 'rgba(22,35,46,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+  },
+  merkLogo: { width: '100%', height: '100%' },
+  meerVlak: {
+    backgroundColor: EkoColors.primaryDark,
+    borderColor: EkoColors.primaryDark,
+  },
+  merkNaam: {
+    marginTop: 8,
+    fontFamily: EkoFonts.bodyMedium,
+    fontSize: 12,
+    textAlign: 'center',
+    color: EkoColors.primaryDark,
+  },
+  meerNaam: { fontFamily: EkoFonts.bodyBold },
 });
