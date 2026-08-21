@@ -551,13 +551,13 @@ export default function ProductScherm() {
       <Modal
         visible={maatOpen}
         transparent
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setMaatOpen(false)}>
         <Pressable style={styles.paneelAchter} onPress={() => setMaatOpen(false)} />
         <View style={[styles.paneel, { paddingBottom: Math.max(insets.bottom, 20) }]}>
           <View style={styles.paneelGreep} />
           <View style={styles.paneelKopRij}>
-            <Text style={styles.paneelKop}>Selecteer maat</Text>
+            <Text style={styles.paneelKop}>Maat</Text>
             <Pressable hitSlop={8} onPress={() => setMaatOpen(false)}>
               <Ionicons name="close" size={24} color={EkoColors.primaryDark} />
             </Pressable>
@@ -970,7 +970,7 @@ const styles = StyleSheet.create({
   },
   paneelAchter: {
     flex: 1,
-    backgroundColor: 'rgba(22,35,46,0.4)',
+    backgroundColor: 'rgba(22,35,46,0.18)',
   },
   paneel: {
     backgroundColor: EkoColors.white,
@@ -995,7 +995,7 @@ const styles = StyleSheet.create({
   },
   paneelKop: {
     fontFamily: EkoFonts.headingBold,
-    fontSize: 19,
+    fontSize: 17,
     letterSpacing: 0.5,
     color: EkoColors.primaryDark,
   },
@@ -1003,13 +1003,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: EkoColors.lightSteelBlue,
   },
   paneelRijTekst: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 16,
+    fontSize: 15,
     color: EkoColors.primaryDark,
   },
   paneelRijTekstAan: {
