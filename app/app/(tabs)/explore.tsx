@@ -15,7 +15,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProductCardData } from '@/components/product-card';
 import { CategorieTegel } from '@/components/winkel/categorie-tegel';
-import { ProductTegel } from '@/components/winkel/product-tegel';
 import { EkoColors, EkoFonts, EkoRadius } from '@/constants/eko-theme';
 import { fetchWebflowProducts } from '@/lib/webflow-products';
 import { HOOFDCATEGORIEEN } from '@/lib/winkel-boom';
@@ -70,16 +69,44 @@ export default function ZoekScherm() {
   const actief = HOOFDCATEGORIEEN.find((h) => h.slug === actieveSlug) ?? HOOFDCATEGORIEEN[0];
   const fotoSubs = actief.subs.filter((s) => s.foto).slice(0, 5);
 
-  const zoekResultaten = useMemo(() => {
+  /* Vaak gezocht: suggesties uit merken, productnamen en categorieën. */
+  const suggesties = useMemo(() => {
     const q = zoek.trim().toLowerCase();
     if (!q) return [];
-    return producten.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        (p.merk || '').toLowerCase().includes(q) ||
-        (p.kleur || '').toLowerCase().includes(q)
-    );
+    const kandidaten: string[] = [];
+    producten.forEach((p) => {
+      if (p.merk && p.merk.toLowerCase().includes(q)) kandidaten.push(p.merk.toLowerCase());
+      if (p.name.toLowerCase().includes(q)) kandidaten.push(p.name.toLowerCase());
+      if (p.merk && p.name.toLowerCase().includes(q)) {
+        kandidaten.push(`${p.name} ${p.merk}`.toLowerCase());
+      }
+    });
+    HOOFDCATEGORIEEN.forEach((h) => {
+      if (h.naam.toLowerCase().includes(q)) kandidaten.push(h.naam.toLowerCase());
+      h.subs.forEach((s) => {
+        if (s.naam.toLowerCase().includes(q)) kandidaten.push(s.naam.toLowerCase());
+      });
+    });
+    return Array.from(new Set([q, ...kandidaten])).slice(0, 6);
   }, [zoek, producten]);
+
+  /* Categorieën die op de zoekterm passen, met hun plaats in de winkel. */
+  const categorieTreffers = useMemo(() => {
+    const q = zoek.trim().toLowerCase();
+    if (!q) return [];
+    const treffers: { naam: string; kruimel: string; pad: string }[] = [];
+    HOOFDCATEGORIEEN.forEach((h) => {
+      if (h.naam.toLowerCase().includes(q)) {
+        treffers.push({ naam: h.naam, kruimel: 'Winkel', pad: `/categorie/${h.slug}` });
+      }
+      h.subs.forEach((s) => {
+        if (s.naam.toLowerCase().includes(q)) {
+          treffers.push({ naam: s.naam, kruimel: `${h.naam} / Winkel`, pad: `/lijst/${s.slug}` });
+        }
+      });
+    });
+    return treffers.slice(0, 6);
+  }, [zoek]);
 
   const aanHetZoeken = zoek.trim().length > 0;
   /* Zodra de zoekbalk openstaat en leeg is, komt de zoekgeschiedenis in beeld. */
@@ -102,10 +129,14 @@ export default function ZoekScherm() {
     Keyboard.dismiss();
   }
 
+  /** Bewaart de term en opent het resultatenscherm. */
   function zoekOp(term: string) {
-    setZoek(term);
-    bewaarZoekterm(term);
+    const schoon = term.trim();
+    if (!schoon) return;
+    bewaarZoekterm(schoon);
+    setFocus(false);
     Keyboard.dismiss();
+    router.push(`/zoeken/${encodeURIComponent(schoon)}`);
   }
 
   const balkOnder = toetsenbord > 0 ? Math.max(10, toetsenbord - TABBALK_RUIMTE + 8) : 10;
@@ -144,30 +175,35 @@ export default function ZoekScherm() {
           ))}
         </ScrollView>
       ) : aanHetZoeken ? (
-        /* -------------------------------------------------- resultaten */
-        <FlatList
-          data={zoekResultaten}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          keyboardShouldPersistTaps="handled"
-          columnWrapperStyle={{ gap: 16, paddingHorizontal: 16 }}
-          ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
-          contentContainerStyle={{ paddingTop: 8, paddingBottom: 140 }}
-          ListHeaderComponent={
-            <Text style={styles.zoekKop}>
-              {zoekResultaten.length}
-              {zoekResultaten.length === 1 ? ' resultaat' : ' resultaten'} voor “{zoek.trim()}”
-            </Text>
-          }
-          renderItem={({ item }) => (
-            <ProductTegel product={item} onPress={() => router.push(`/product/${item.id}`)} />
+        /* ------------------------------- suggesties tijdens het typen */
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.suggesties}>
+          <Text style={styles.sectieKop}>Vaak gezocht</Text>
+          {suggesties.map((term) => (
+            <Pressable key={term} style={styles.suggestieRij} onPress={() => zoekOp(term)}>
+              <Text style={styles.suggestieTekst}>{term}</Text>
+            </Pressable>
+          ))}
+
+          {categorieTreffers.length > 0 && (
+            <>
+              <Text style={[styles.sectieKop, styles.sectieKopTweede]}>Categorieën</Text>
+              {categorieTreffers.map((c) => (
+                <Pressable
+                  key={c.pad}
+                  style={styles.suggestieRij}
+                  onPress={() => {
+                    bewaarZoekterm(c.naam);
+                    setFocus(false);
+                    Keyboard.dismiss();
+                    router.push(c.pad as never);
+                  }}>
+                  <Text style={styles.suggestieTekst}>{c.naam}</Text>
+                  <Text style={styles.kruimel}>{c.kruimel}</Text>
+                </Pressable>
+              ))}
+            </>
           )}
-          ListEmptyComponent={
-            <Text style={styles.leegTekst}>
-              Geen producten gevonden. Probeer een andere zoekterm of blader door de categorieën.
-            </Text>
-          }
-        />
+        </ScrollView>
       ) : (
         /* --------------------------------------------- winkelstructuur */
         <>
@@ -245,7 +281,7 @@ export default function ZoekScherm() {
             onChangeText={setZoek}
             onFocus={() => setFocus(true)}
             returnKeyType="search"
-            onSubmitEditing={onthoud}
+            onSubmitEditing={() => zoekOp(zoek)}
           />
           {aanHetZoeken ? (
             <Pressable hitSlop={10} onPress={leegVeld}>
@@ -377,20 +413,37 @@ const styles = StyleSheet.create({
     color: EkoColors.primaryDark,
   },
 
-  /* RESULTATEN */
-  zoekKop: {
-    fontFamily: EkoFonts.bodyRegular,
-    fontSize: 14,
-    color: EkoColors.paragraphGray,
+  /* SUGGESTIES */
+  suggesties: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingTop: 6,
+    paddingBottom: 140,
   },
-  leegTekst: {
+  sectieKop: {
+    fontFamily: EkoFonts.headingBold,
+    fontSize: 24,
+    letterSpacing: 0.3,
+    color: EkoColors.primaryDark,
+    paddingBottom: 14,
+  },
+  sectieKopTweede: {
+    paddingTop: 36,
+  },
+  suggestieRij: {
+    paddingVertical: 18,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: EkoColors.lightSteelBlue,
+  },
+  suggestieTekst: {
+    fontFamily: EkoFonts.bodyRegular,
+    fontSize: 17,
+    color: EkoColors.primaryDark,
+  },
+  kruimel: {
     fontFamily: EkoFonts.bodyRegular,
     fontSize: 15,
-    lineHeight: 22,
     color: EkoColors.paragraphGray,
-    paddingHorizontal: 16,
+    marginTop: 6,
   },
 
   /* ZOEKBALK */
