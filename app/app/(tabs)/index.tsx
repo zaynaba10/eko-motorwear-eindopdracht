@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dimensions,
   Pressable,
@@ -12,6 +12,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BlogOverzicht } from '@/components/paginas/blog-overzicht';
+import { DienstenPagina } from '@/components/paginas/diensten';
+import { OverOnsPagina } from '@/components/paginas/over-ons';
 import { ProductCardData } from '@/components/product-card';
 import { CollectieKaart } from '@/components/winkel/collectie-kaart';
 import { SectieKop } from '@/components/winkel/sectie-kop';
@@ -24,10 +27,21 @@ import { fetchWebflowProducts } from '@/lib/webflow-products';
 import { HOOFDCATEGORIEEN } from '@/lib/winkel-boom';
 
 /**
- * Startscherm van de app: de winkelpagina in warenhuisstijl.
- * Opbouw: zwevende afdelingskeuze → hero → categorieën → laatst bekeken →
- * uitgelicht → nieuwe collectie → inspiratie → merken → merkcampagnes.
+ * Startscherm van de app. De keuzelijst linksboven wisselt tussen de vier
+ * pagina's van de website: Home (de winkelpagina), Over ons, Onze diensten
+ * en Blog. De winkelpagina zelf blijft in warenhuisstijl opgebouwd:
+ * hero → categorieën → laatst bekeken → uitgelicht → nieuwe collectie →
+ * inspiratie → merken → merkcampagnes.
  */
+
+type PaginaSleutel = 'home' | 'over-ons' | 'diensten' | 'blog';
+
+const PAGINAS: { sleutel: PaginaSleutel; naam: string }[] = [
+  { sleutel: 'home', naam: 'Home' },
+  { sleutel: 'over-ons', naam: 'Over ons' },
+  { sleutel: 'diensten', naam: 'Onze diensten' },
+  { sleutel: 'blog', naam: 'Blog' },
+];
 
 const { width: BREEDTE } = Dimensions.get('window');
 const RAND = 16;
@@ -85,8 +99,8 @@ export default function WinkelStartScherm() {
   const [laden, setLaden] = useState(true);
   const [fout, setFout] = useState<string | null>(null);
 
-  const [afdeling, setAfdeling] = useState('Alles');
-  const [afdelingOpen, setAfdelingOpen] = useState(false);
+  const [pagina, setPagina] = useState<PaginaSleutel>('home');
+  const [paginaOpen, setPaginaOpen] = useState(false);
   const [bekekenIds, setBekekenIds] = useState<string[]>(laatstBekeken());
 
   useEffect(() => {
@@ -102,16 +116,11 @@ export default function WinkelStartScherm() {
       });
   }, []);
 
-  /* Afdelingen uit het geslachtsveld van de producten (Heren, Dames, …). */
-  const afdelingen = useMemo(() => {
-    const gevonden = producten.map((p) => p.geslacht).filter(Boolean) as string[];
-    return ['Alles', ...Array.from(new Set(gevonden))];
-  }, [producten]);
+  const zichtbaar = producten;
 
-  const zichtbaar = useMemo(
-    () => (afdeling === 'Alles' ? producten : producten.filter((p) => p.geslacht === afdeling)),
-    [producten, afdeling]
-  );
+  /* Ruimte onder de zwevende keuzelijst, zodat die niets overdekt. */
+  const bovenRuimte = insets.top + 66;
+  const huidigePagina = PAGINAS.find((p) => p.sleutel === pagina) ?? PAGINAS[0];
 
   /* Producten met "feature on home" aan in Webflow krijgen voorrang. */
   const uitgelicht = zichtbaar.filter((p) => p.uitgelicht);
@@ -129,6 +138,11 @@ export default function WinkelStartScherm() {
 
   return (
     <View style={styles.scherm}>
+      {pagina === 'over-ons' && <OverOnsPagina bovenRuimte={bovenRuimte} />}
+      {pagina === 'diensten' && <DienstenPagina bovenRuimte={bovenRuimte} />}
+      {pagina === 'blog' && <BlogOverzicht bovenRuimte={bovenRuimte} />}
+
+      {pagina === 'home' && (
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
         {/* ---------------------------------------------------------- hero */}
         <Banner
@@ -204,7 +218,7 @@ export default function WinkelStartScherm() {
           {laden && <Text style={styles.hulptekst}>Producten laden…</Text>}
           {fout && <Text style={styles.fouttekst}>Fout bij het laden: {fout}</Text>}
           {!laden && !fout && nieuweCollectie.length === 0 && (
-            <Text style={styles.hulptekst}>Geen producten in deze afdeling.</Text>
+            <Text style={styles.hulptekst}>Geen producten gevonden.</Text>
           )}
 
           <View style={styles.raster}>
@@ -302,30 +316,35 @@ export default function WinkelStartScherm() {
           </View>
         </View>
       </ScrollView>
+      )}
 
-      {/* ------------------------------- zwevende afdelingskeuze linksboven */}
+      {/* ---------------------------------- zwevende paginakeuze linksboven */}
       <View style={[styles.afdelingLaag, { top: insets.top + 8 }]} pointerEvents="box-none">
-        <Pressable style={styles.afdelingPil} onPress={() => setAfdelingOpen((v) => !v)}>
-          <Text style={styles.afdelingTekst}>{afdeling}</Text>
+        <Pressable style={styles.afdelingPil} onPress={() => setPaginaOpen((v) => !v)}>
+          <Text style={styles.afdelingTekst}>{huidigePagina.naam}</Text>
           <Ionicons
-            name={afdelingOpen ? 'chevron-up' : 'chevron-down'}
+            name={paginaOpen ? 'chevron-up' : 'chevron-down'}
             size={16}
             color={EkoColors.primaryDark}
           />
         </Pressable>
 
-        {afdelingOpen && (
+        {paginaOpen && (
           <View style={styles.afdelingLijst}>
-            {afdelingen.map((a) => (
+            {PAGINAS.map((p) => (
               <Pressable
-                key={a}
+                key={p.sleutel}
                 style={styles.afdelingOptie}
                 onPress={() => {
-                  setAfdeling(a);
-                  setAfdelingOpen(false);
+                  setPagina(p.sleutel);
+                  setPaginaOpen(false);
                 }}>
-                <Text style={[styles.afdelingOptieTekst, a === afdeling && styles.afdelingOptieAan]}>
-                  {a}
+                <Text
+                  style={[
+                    styles.afdelingOptieTekst,
+                    p.sleutel === pagina && styles.afdelingOptieAan,
+                  ]}>
+                  {p.naam}
                 </Text>
               </Pressable>
             ))}
