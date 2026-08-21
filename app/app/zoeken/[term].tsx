@@ -173,22 +173,28 @@ export default function ZoekresultatenScherm() {
 
       {/* Afdelingen */}
       {afdelingen.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipsRij}>
-          {afdelingen.map((a) => {
-            const aan = a === afdeling;
-            return (
-              <Pressable
-                key={a}
-                style={[styles.vlakChip, aan && styles.vlakChipAan]}
-                onPress={() => setAfdeling(aan ? null : a)}>
-                <Text style={[styles.vlakChipTekst, aan && styles.vlakChipTekstAan]}>{a}</Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        <View style={styles.chipsBalk}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipsRij}>
+            {afdelingen.map((a) => {
+              const aan = a === afdeling;
+              return (
+                <Pressable
+                  key={a}
+                  style={[styles.vlakChip, aan && styles.vlakChipAan]}
+                  onPress={() => setAfdeling(aan ? null : a)}>
+                  <Text
+                    numberOfLines={1}
+                    style={[styles.vlakChipTekst, aan && styles.vlakChipTekstAan]}>
+                    {a}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
       )}
 
       {/* Resultaten */}
@@ -383,9 +389,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   rondeKnop: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: EkoColors.lightGray,
@@ -394,28 +400,32 @@ const styles = StyleSheet.create({
   kopMidden: { flex: 1, alignItems: 'center' },
   kopTitel: {
     fontFamily: EkoFonts.headingBold,
-    fontSize: 20,
+    fontSize: 17,
     letterSpacing: 0.3,
     color: EkoColors.primaryDark,
   },
   kopAantal: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 13,
+    fontSize: 12,
     color: EkoColors.paragraphGray,
     marginTop: 2,
   },
 
-  chipsRij: { paddingHorizontal: 16, paddingVertical: 10, gap: 10 },
+  chipsBalk: { flexGrow: 0, flexShrink: 0 },
+  chipsRij: { paddingHorizontal: 16, paddingVertical: 10, gap: 10, alignItems: 'center' },
   vlakChip: {
+    flexGrow: 0,
+    flexShrink: 0,
     borderWidth: 1,
     borderColor: EkoColors.lightSteelBlue,
-    paddingHorizontal: 22,
-    paddingVertical: 14,
+    paddingHorizontal: 18,
+    height: 40,
+    justifyContent: 'center',
   },
   vlakChipAan: { borderColor: EkoColors.primaryDark, backgroundColor: EkoColors.primaryDark },
   vlakChipTekst: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 15,
+    fontSize: 14,
     color: EkoColors.primaryDark,
   },
   vlakChipTekstAan: { color: EkoColors.white },
@@ -459,30 +469,30 @@ const styles = StyleSheet.create({
   groepKop: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 15,
     gap: 12,
   },
   groepTitel: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 17,
+    fontSize: 15,
     color: EkoColors.primaryDark,
   },
   groepSamenvatting: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 15,
+    fontSize: 13,
     color: EkoColors.paragraphGray,
-    marginTop: 4,
+    marginTop: 3,
   },
-  groepInhoud: { paddingBottom: 18 },
+  groepInhoud: { paddingBottom: 14 },
   keuzeRij: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
+    paddingVertical: 11,
   },
   keuzeTekst: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 16,
+    fontSize: 15,
     color: EkoColors.primaryDark,
   },
   keuzeTekstAan: { fontFamily: EkoFonts.bodyBold, color: EkoColors.primary },
@@ -490,14 +500,14 @@ const styles = StyleSheet.create({
   rondChip: {
     borderWidth: 1,
     borderColor: EkoColors.lightSteelBlue,
-    borderRadius: 24,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
   rondChipAan: { backgroundColor: EkoColors.primaryDark, borderColor: EkoColors.primaryDark },
   rondChipTekst: {
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 15,
+    fontSize: 14,
     color: EkoColors.primaryDark,
   },
   rondChipTekstAan: { color: EkoColors.white },
@@ -515,12 +525,12 @@ const styles = StyleSheet.create({
   },
   zwarteKnop: {
     backgroundColor: EkoColors.primaryDark,
-    paddingVertical: 18,
+    paddingVertical: 15,
     alignItems: 'center',
   },
   zwarteKnopTekst: {
     fontFamily: EkoFonts.bodyBold,
-    fontSize: 16,
+    fontSize: 15,
     color: EkoColors.white,
   },
 });
