@@ -1,15 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Groep, IconNaam, MenuRij } from '@/components/account-ui';
 import { EkoColors, EkoFonts, EkoRadius } from '@/constants/eko-theme';
 import { useBestellingen } from '@/lib/bestellingen';
+import { uitloggen, useGebruiker } from '@/lib/auth';
 import { useVerlanglijst } from '@/lib/verlanglijst';
 import { actieveVoucher, useMandStaat } from '@/lib/winkelmand';
 
-const NAAM = 'zaynaba';
 const DOEL = 750;
 
 type Item = { icoon: IconNaam; label: string; pad?: string; extra?: string };
@@ -68,6 +68,7 @@ export default function AccountHub() {
   const insets = useSafeAreaInsets();
 
   /* Het dashboard leest mee met de gedeelde staat, dus het volgt elke wijziging. */
+  const gebruiker = useGebruiker();
   const bestellingen = useBestellingen();
   const verlanglijst = useVerlanglijst();
   const { items } = useMandStaat();
@@ -83,13 +84,64 @@ export default function AccountHub() {
     voucher: voucher?.code,
   });
 
+  /* Niet ingelogd: eerst aanmelden of een account aanmaken. */
+  if (!gebruiker) {
+    return (
+      <View style={styles.scherm}>
+        <View style={[styles.topbalk, { paddingTop: insets.top + 8 }]}>
+          <View style={styles.rond} />
+          <Text style={styles.welkom}>Mijn account</Text>
+          <Pressable
+            style={styles.rond}
+            hitSlop={10}
+            accessibilityLabel="Klantenservice"
+            onPress={() => router.push('/account/klantenservice')}>
+            <Ionicons name="chatbubble-ellipses-outline" size={18} color={EkoColors.primaryDark} />
+          </Pressable>
+        </View>
+
+        <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+          <View style={styles.welkomVlak}>
+            <Ionicons name="person-circle-outline" size={54} color={EkoColors.white} />
+            <Text style={styles.welkomTitel}>Welkom bij EKO Motorwear</Text>
+            <Text style={styles.welkomTekst}>
+              Log in of maak een account aan om je verlanglijst, bestellingen en gegevens te
+              bewaren.
+            </Text>
+            <Pressable style={styles.welkomKnop} onPress={() => router.push('/inloggen')}>
+              <Text style={styles.welkomKnopTekst}>Inloggen of registreren</Text>
+            </Pressable>
+          </View>
+
+          <Groep>
+            <MenuRij
+              icoon="headset-outline"
+              label="Klantenservice"
+              onPress={() => router.push('/account/klantenservice')}
+            />
+            <MenuRij
+              icoon="time-outline"
+              label="Winkel en openingsuren"
+              onPress={() => router.push('/account/winkel')}
+            />
+            <MenuRij
+              icoon="information-circle-outline"
+              label="Privacy en voorwaarden"
+              onPress={() => router.push('/account/privacy')}
+            />
+          </Groep>
+        </ScrollView>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.scherm}>
       <View style={[styles.topbalk, { paddingTop: insets.top + 8 }]}>
         <Pressable style={styles.rond} hitSlop={10} accessibilityLabel="Scan je pas">
           <Ionicons name="qr-code-outline" size={18} color={EkoColors.primaryDark} />
         </Pressable>
-        <Text style={styles.welkom}>Welkom, {NAAM}</Text>
+        <Text style={styles.welkom}>Welkom, {gebruiker.voornaam}</Text>
         <Pressable
           style={styles.rond}
           hitSlop={10}
@@ -130,7 +182,21 @@ export default function AccountHub() {
         ))}
 
         <Groep>
-          <MenuRij icoon="log-out-outline" label="Uitloggen" pijl={false} />
+          <MenuRij
+            icoon="log-out-outline"
+            label="Uitloggen"
+            pijl={false}
+            onPress={() =>
+              Alert.alert(
+                'Weet je zeker dat je wilt uitloggen?',
+                'Je moet opnieuw inloggen voor toegang tot je profiel, bestellingen en voorkeuren.',
+                [
+                  { text: 'Annuleren', style: 'cancel' },
+                  { text: 'Uitloggen', style: 'destructive', onPress: uitloggen },
+                ]
+              )
+            }
+          />
         </Groep>
       </ScrollView>
     </View>
@@ -163,6 +229,43 @@ const styles = StyleSheet.create({
     color: EkoColors.primaryDark,
   },
 
+  welkomVlak: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    paddingVertical: 34,
+    paddingHorizontal: 22,
+    borderRadius: 20,
+    backgroundColor: EkoColors.primaryDark,
+    alignItems: 'center',
+  },
+  welkomTitel: {
+    marginTop: 12,
+    fontFamily: EkoFonts.headingBold,
+    fontSize: 22,
+    letterSpacing: 0.5,
+    color: EkoColors.white,
+    textAlign: 'center',
+  },
+  welkomTekst: {
+    marginTop: 8,
+    fontFamily: EkoFonts.bodyRegular,
+    fontSize: 14,
+    lineHeight: 21,
+    color: EkoColors.lightSteelBlue,
+    textAlign: 'center',
+  },
+  welkomKnop: {
+    marginTop: 20,
+    alignSelf: 'stretch',
+    backgroundColor: EkoColors.primary,
+    paddingVertical: 15,
+    alignItems: 'center',
+  },
+  welkomKnopTekst: {
+    fontFamily: EkoFonts.bodyBold,
+    fontSize: 15,
+    color: EkoColors.white,
+  },
   kaart: {
     marginHorizontal: 16,
     marginTop: 8,

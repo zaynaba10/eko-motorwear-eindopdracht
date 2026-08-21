@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProductCardData } from '@/components/product-card';
 import { EkoColors, EkoFonts } from '@/constants/eko-theme';
+import { useGebruiker } from '@/lib/auth';
 import { prijsKort } from '@/lib/format';
 import { matenVoorProduct } from '@/lib/maten';
 import {
@@ -46,6 +47,7 @@ export default function VerlanglijstScherm() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const lijst = useVerlanglijst();
+  const gebruiker = useGebruiker();
 
   const [producten, setProducten] = useState<ProductCardData[]>([]);
   const [catIds, setCatIds] = useState<Record<string, string>>({});
@@ -116,13 +118,20 @@ export default function VerlanglijstScherm() {
       ) : regels.length === 0 ? (
         <View style={styles.midden}>
           <Ionicons name="heart-outline" size={40} color={EkoColors.darkGray} />
-          <Text style={styles.leegTitel}>Je verlanglijst is leeg</Text>
-          <Text style={styles.leegTekst}>
-            Tik op het hartje bij een product om het hier te bewaren. Zo vind je het later
-            makkelijk terug.
+          <Text style={styles.leegTitel}>
+            {gebruiker ? 'Je verlanglijst is leeg' : 'Bewaar je favorieten'}
           </Text>
-          <Pressable style={styles.leegKnop} onPress={() => router.push('/explore')}>
-            <Text style={styles.leegKnopTekst}>Verder winkelen</Text>
+          <Text style={styles.leegTekst}>
+            {gebruiker
+              ? 'Tik op het hartje bij een product om het hier te bewaren. Zo vind je het later makkelijk terug.'
+              : 'Log in of maak een account aan om je favorieten te bewaren en terug te vinden.'}
+          </Text>
+          <Pressable
+            style={styles.leegKnop}
+            onPress={() => router.push(gebruiker ? '/explore' : '/inloggen')}>
+            <Text style={styles.leegKnopTekst}>
+              {gebruiker ? 'Verder winkelen' : 'Inloggen of registreren'}
+            </Text>
           </Pressable>
         </View>
       ) : (
