@@ -138,184 +138,190 @@ export default function WinkelStartScherm() {
 
   return (
     <View style={styles.scherm}>
-      {pagina === 'over-ons' && <OverOnsPagina bovenRuimte={bovenRuimte} />}
-      {pagina === 'diensten' && <DienstenPagina bovenRuimte={bovenRuimte} />}
+      {pagina === 'over-ons' && <OverOnsPagina />}
+      {pagina === 'diensten' && <DienstenPagina />}
       {pagina === 'blog' && <BlogOverzicht bovenRuimte={bovenRuimte} />}
 
       {pagina === 'home' && (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-        {/* ---------------------------------------------------------- hero */}
-        <Banner
-          foto={HERO_FOTO}
-          bovenkop="COLLECTIE 2026"
-          titel="Klaar voor elke rit"
-          knop="Bekijk de selectie"
-          hoogte={520}
-          onPress={() => router.push('/explore')}
-        />
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+          {/* ---------------------------------------------------------- hero */}
+          <Banner
+            foto={HERO_FOTO}
+            bovenkop="COLLECTIE 2026"
+            titel="Klaar voor elke rit"
+            knop="Bekijk de selectie"
+            hoogte={520}
+            onPress={() => router.push('/explore')}
+          />
+          <Pressable
+            onPress={() => router.push('/game')}
+            style={{ borderWidth: 2, margin: 16, padding: 14, alignItems: 'center' }}
+          >
+            <Text>Speel de mini-game</Text>
+          </Pressable>
 
-        {/* -------------------------------------------------- categorieën */}
-        <View style={styles.sectieLicht}>
-          <SectieKop titel="Ontdek de categorieën" onMeer={() => router.push('/explore')} />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.rij}>
-            {HOOFDCATEGORIEEN.map((h) => (
-              <Pressable
-                key={h.slug}
-                style={styles.categorieTegel}
-                onPress={() => router.push(`/categorie/${h.slug}`)}>
-                <Image source={{ uri: h.foto }} style={styles.categorieFoto} contentFit="cover" />
-                <Text style={styles.categorieNaam}>{h.naam}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* ------------------------------------ laatst bekeken / populair */}
-        {rijProducten.length > 0 && (
-          <View style={styles.sectie}>
-            <SectieKop titel={rijTitel} />
+          {/* -------------------------------------------------- categorieën */}
+          <View style={styles.sectieLicht}>
+            <SectieKop titel="Ontdek de categorieën" onMeer={() => router.push('/explore')} />
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.rij}>
-              {rijProducten.map((p) => (
-                <CollectieKaart
-                  key={p.id}
-                  product={p}
-                  breedte={190}
-                  onPress={() => naarProduct(p.id)}
-                  onVerwijder={
-                    bekeken.length > 0
-                      ? () => {
-                          verwijderBekeken(p.id);
-                          setBekekenIds(laatstBekeken());
-                        }
-                      : undefined
-                  }
-                />
-              ))}
-            </ScrollView>
-          </View>
-        )}
-
-        {/* --------------------------------------------------- uitgelicht */}
-        <Banner
-          foto={UITGELICHT_FOTO}
-          bovenkop="UITGELICHT"
-          titel="Ons huismerk G&F"
-          knop="Bekijk de selectie"
-          hoogte={340}
-          onPress={() => router.push('/explore')}
-        />
-
-        {/* ---------------------------------------------- nieuwe collectie */}
-        <View style={styles.sectieLicht}>
-          <SectieKop titel="Nieuwe collectie" onMeer={() => router.push('/lijst/nieuw')} />
-
-          {laden && <Text style={styles.hulptekst}>Producten laden…</Text>}
-          {fout && <Text style={styles.fouttekst}>Fout bij het laden: {fout}</Text>}
-          {!laden && !fout && nieuweCollectie.length === 0 && (
-            <Text style={styles.hulptekst}>Geen producten gevonden.</Text>
-          )}
-
-          <View style={styles.raster}>
-            {nieuweCollectie.map((p, i) => (
-              <CollectieKaart
-                key={p.id}
-                product={p}
-                breedte={KOLOM}
-                label={i === 1 ? 'Nieuwe collectie' : undefined}
-                onPress={() => naarProduct(p.id)}
-              />
-            ))}
-          </View>
-        </View>
-
-        {/* ---------------------------------------------------- inspiratie */}
-        {inspiratie.length > 0 && (
-          <View style={styles.sectie}>
-            <SectieKop titel="Inspiratie" onMeer={() => router.push('/blog')} />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.rij}>
-              {inspiratie.map((b) => (
+              {HOOFDCATEGORIEEN.map((h) => (
                 <Pressable
-                  key={b.id}
-                  style={styles.blogKaart}
-                  onPress={() => router.push(`/blog/${b.id}`)}>
-                  {b.imageUrl ? (
-                    <Image source={{ uri: b.imageUrl }} style={styles.blogFoto} contentFit="cover" />
-                  ) : (
-                    <View style={[styles.blogFoto, styles.blogFotoLeeg]} />
-                  )}
-                  {!!b.categoryName && (
-                    <Text style={styles.blogCategorie}>{b.categoryName}</Text>
-                  )}
-                  <Text style={styles.blogTitel} numberOfLines={3}>
-                    {b.name}
-                  </Text>
-                  <Text style={styles.blogDatum}>{datumKort(b.date)}</Text>
+                  key={h.slug}
+                  style={styles.categorieTegel}
+                  onPress={() => router.push(`/categorie/${h.slug}`)}>
+                  <Image source={{ uri: h.foto }} style={styles.categorieFoto} contentFit="cover" />
+                  <Text style={styles.categorieNaam}>{h.naam}</Text>
                 </Pressable>
               ))}
             </ScrollView>
           </View>
-        )}
 
-        {/* --------------------------------------------------- onze merken */}
-        <View style={styles.sectieLicht}>
-          <SectieKop titel="Onze merken" onMeer={() => router.push('/merken')} />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.rij}>
-            {MERKEN_MET_LOGO.slice(0, 12).map((m) => (
-              <Pressable
-                key={m.naam}
-                style={styles.merkTegel}
-                accessibilityLabel={`Producten van ${m.naam}`}
-                onPress={() => router.push(`/zoeken/${encodeURIComponent(m.naam)}`)}>
-                <View style={styles.merkLogoVlak}>
-                  <Image source={{ uri: m.logo }} style={styles.merkLogo} contentFit="contain" />
-                </View>
-                <Text style={styles.merkNaam} numberOfLines={1}>
-                  {m.naam}
-                </Text>
-              </Pressable>
-            ))}
+          {/* ------------------------------------ laatst bekeken / populair */}
+          {rijProducten.length > 0 && (
+            <View style={styles.sectie}>
+              <SectieKop titel={rijTitel} />
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.rij}>
+                {rijProducten.map((p) => (
+                  <CollectieKaart
+                    key={p.id}
+                    product={p}
+                    breedte={190}
+                    onPress={() => naarProduct(p.id)}
+                    onVerwijder={
+                      bekeken.length > 0
+                        ? () => {
+                          verwijderBekeken(p.id);
+                          setBekekenIds(laatstBekeken());
+                        }
+                        : undefined
+                    }
+                  />
+                ))}
+              </ScrollView>
+            </View>
+          )}
 
-            <Pressable
-              style={styles.merkTegel}
-              accessibilityLabel="Alle merken bekijken"
-              onPress={() => router.push('/merken')}>
-              <View style={[styles.merkLogoVlak, styles.meerVlak]}>
-                <Ionicons name="arrow-forward" size={22} color={EkoColors.white} />
-              </View>
-              <Text style={[styles.merkNaam, styles.meerNaam]}>Meer</Text>
-            </Pressable>
-          </ScrollView>
-        </View>
+          {/* --------------------------------------------------- uitgelicht */}
+          <Banner
+            foto={UITGELICHT_FOTO}
+            bovenkop="UITGELICHT"
+            titel="Ons huismerk G&F"
+            knop="Bekijk de selectie"
+            hoogte={340}
+            onPress={() => router.push('/explore')}
+          />
 
-        {/* ---------------------------------------------- merkcampagnes */}
-        <View style={styles.sectie}>
-          <SectieKop titel="Motorkledij merken" klein />
-          <View style={styles.campagneRij}>
-            <Pressable style={styles.campagne} onPress={() => router.push('/explore')}>
-              <Image source={{ uri: CAMPAGNE_A }} style={StyleSheet.absoluteFill} contentFit="cover" />
-              <View style={styles.campagneWaas} pointerEvents="none" />
-              <Text style={styles.campagneTekst}>G&F MOTORWEAR</Text>
-            </Pressable>
-            <Pressable style={styles.campagne} onPress={() => router.push('/explore')}>
-              <Image source={{ uri: CAMPAGNE_B }} style={StyleSheet.absoluteFill} contentFit="cover" />
-              <View style={styles.campagneWaas} pointerEvents="none" />
-              <Text style={styles.campagneTekst}>TOPMERKEN</Text>
-            </Pressable>
+          {/* ---------------------------------------------- nieuwe collectie */}
+          <View style={styles.sectieLicht}>
+            <SectieKop titel="Nieuwe collectie" onMeer={() => router.push('/lijst/nieuw')} />
+
+            {laden && <Text style={styles.hulptekst}>Producten laden…</Text>}
+            {fout && <Text style={styles.fouttekst}>Fout bij het laden: {fout}</Text>}
+            {!laden && !fout && nieuweCollectie.length === 0 && (
+              <Text style={styles.hulptekst}>Geen producten gevonden.</Text>
+            )}
+
+            <View style={styles.raster}>
+              {nieuweCollectie.map((p, i) => (
+                <CollectieKaart
+                  key={p.id}
+                  product={p}
+                  breedte={KOLOM}
+                  label={i === 1 ? 'Nieuwe collectie' : undefined}
+                  onPress={() => naarProduct(p.id)}
+                />
+              ))}
+            </View>
           </View>
-        </View>
-      </ScrollView>
+
+          {/* ---------------------------------------------------- inspiratie */}
+          {inspiratie.length > 0 && (
+            <View style={styles.sectie}>
+              <SectieKop titel="Inspiratie" onMeer={() => router.push('/blog')} />
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.rij}>
+                {inspiratie.map((b) => (
+                  <Pressable
+                    key={b.id}
+                    style={styles.blogKaart}
+                    onPress={() => router.push(`/blog/${b.id}`)}>
+                    {b.imageUrl ? (
+                      <Image source={{ uri: b.imageUrl }} style={styles.blogFoto} contentFit="cover" />
+                    ) : (
+                      <View style={[styles.blogFoto, styles.blogFotoLeeg]} />
+                    )}
+                    {!!b.categoryName && (
+                      <Text style={styles.blogCategorie}>{b.categoryName}</Text>
+                    )}
+                    <Text style={styles.blogTitel} numberOfLines={3}>
+                      {b.name}
+                    </Text>
+                    <Text style={styles.blogDatum}>{datumKort(b.date)}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* --------------------------------------------------- onze merken */}
+          <View style={styles.sectieLicht}>
+            <SectieKop titel="Onze merken" onMeer={() => router.push('/merken')} />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.rij}>
+              {MERKEN_MET_LOGO.slice(0, 12).map((m) => (
+                <Pressable
+                  key={m.naam}
+                  style={styles.merkTegel}
+                  accessibilityLabel={`Producten van ${m.naam}`}
+                  onPress={() => router.push(`/zoeken/${encodeURIComponent(m.naam)}`)}>
+                  <View style={styles.merkLogoVlak}>
+                    <Image source={{ uri: m.logo }} style={styles.merkLogo} contentFit="contain" />
+                  </View>
+                  <Text style={styles.merkNaam} numberOfLines={1}>
+                    {m.naam}
+                  </Text>
+                </Pressable>
+              ))}
+
+              <Pressable
+                style={styles.merkTegel}
+                accessibilityLabel="Alle merken bekijken"
+                onPress={() => router.push('/merken')}>
+                <View style={[styles.merkLogoVlak, styles.meerVlak]}>
+                  <Ionicons name="arrow-forward" size={22} color={EkoColors.white} />
+                </View>
+                <Text style={[styles.merkNaam, styles.meerNaam]}>Meer</Text>
+              </Pressable>
+            </ScrollView>
+          </View>
+
+          {/* ---------------------------------------------- merkcampagnes */}
+          <View style={styles.sectie}>
+            <SectieKop titel="Motorkledij merken" klein />
+            <View style={styles.campagneRij}>
+              <Pressable style={styles.campagne} onPress={() => router.push('/explore')}>
+                <Image source={{ uri: CAMPAGNE_A }} style={StyleSheet.absoluteFill} contentFit="cover" />
+                <View style={styles.campagneWaas} pointerEvents="none" />
+                <Text style={styles.campagneTekst}>G&F MOTORWEAR</Text>
+              </Pressable>
+              <Pressable style={styles.campagne} onPress={() => router.push('/explore')}>
+                <Image source={{ uri: CAMPAGNE_B }} style={StyleSheet.absoluteFill} contentFit="cover" />
+                <View style={styles.campagneWaas} pointerEvents="none" />
+                <Text style={styles.campagneTekst}>TOPMERKEN</Text>
+              </Pressable>
+            </View>
+          </View>
+        </ScrollView>
       )}
 
       {/* ---------------------------------- zwevende paginakeuze linksboven */}
