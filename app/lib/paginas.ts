@@ -33,6 +33,13 @@ export const OVER_ONS_BLOKKEN: Blok[] = [
   },
 ];
 
+/** Kerncijfers uit het verhaal, als korte balk bovenaan Over ons. */
+export const OVER_ONS_CIJFERS: { waarde: string; label: string }[] = [
+  { waarde: '30+', label: 'jaar ervaring' },
+  { waarde: '3.500', label: 'm² showroom' },
+  { waarde: '48', label: 'topmerken' },
+];
+
 /** De vier pijlers onder "Onze missie". */
 export const MISSIE: Blok[] = [
   {
@@ -102,6 +109,22 @@ export const DIENSTEN: Dienst[] = [
       'Te besteden in één of meerdere keren',
       'Verkrijgbaar in de winkel of via onze webshop, verstuurd of afgedrukt',
     ],
+  },
+];
+
+/** Zo verloopt een herstelling of reiniging in de winkel. */
+export const DIENSTEN_STAPPEN: { titel: string; tekst: string }[] = [
+  {
+    titel: 'Breng je stuk binnen',
+    tekst: 'Kom langs in Kontich met je jas, broek, helm of laarzen — een afspraak is niet nodig.',
+  },
+  {
+    titel: 'Gratis inschatting',
+    tekst: 'We bekijken het samen en geven je meteen een eerlijke prijs en een termijn.',
+  },
+  {
+    titel: 'Klaar? Je krijgt bericht',
+    tekst: 'Zodra alles klaar is, laten we het weten en kan je je stuk komen ophalen.',
   },
 ];
 
