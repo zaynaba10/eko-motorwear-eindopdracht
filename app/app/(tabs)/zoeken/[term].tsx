@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -40,6 +41,9 @@ export default function ZoekresultatenScherm() {
   const zoekterm = decodeURIComponent(String(term ?? ''));
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  /* Vaste tegelbreedte zodat een oneven laatste resultaat niet paginabreed wordt. */
+  const { width: schermBreedte } = useWindowDimensions();
+  const tegelBreedte = Math.floor((schermBreedte - 16 * 2 - 16) / 2);
 
   const [producten, setProducten] = useState<ProductCardData[]>([]);
   const [laden, setLaden] = useState(true);
@@ -211,7 +215,11 @@ export default function ZoekresultatenScherm() {
           ItemSeparatorComponent={() => <View style={{ height: 26 }} />}
           contentContainerStyle={{ paddingTop: 10, paddingBottom: 40 }}
           renderItem={({ item }) => (
-            <ProductTegel product={item} onPress={() => router.push(`/product/${item.id}`)} />
+            <ProductTegel
+              product={item}
+              breedte={tegelBreedte}
+              onPress={() => router.push(`/product/${item.id}`)}
+            />
           )}
           ListEmptyComponent={
             <View style={styles.leeg}>

@@ -117,6 +117,13 @@ export default function TabLayout() {
 
       {/* Blog blijft bereikbaar via Inspiratie op het startscherm, maar krijgt geen tabblad. */}
       <Tabs.Screen name="blog" options={{ href: null }} />
+
+      {/* Winkelschermen zonder eigen tabblad: ze staan bewust ín de tabgroep,
+          zodat de tabbalk tijdens het winkelen altijd zichtbaar blijft. */}
+      <Tabs.Screen name="categorie/[slug]" options={{ href: null }} />
+      <Tabs.Screen name="lijst/[slug]" options={{ href: null }} />
+      <Tabs.Screen name="product/[id]" options={{ href: null }} />
+      <Tabs.Screen name="zoeken/[term]" options={{ href: null }} />
     </Tabs>
   );
 }

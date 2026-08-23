@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -67,6 +68,10 @@ export default function LijstScherm() {
   const { slug } = useLocalSearchParams<{ slug: string; alles?: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  /* Vaste tegelbreedte: zo blijft een oneven laatste product even groot als de
+     rest, in plaats van de volledige rij te vullen. */
+  const { width: schermBreedte } = useWindowDimensions();
+  const tegelBreedte = Math.floor((schermBreedte - 16 * 2 - 12) / 2);
 
   const subcategorie = vindSubcategorie(slug ?? '');
   const hoofd = vindHoofdcategorie(slug ?? '');
@@ -281,7 +286,11 @@ export default function LijstScherm() {
           ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
           contentContainerStyle={{ paddingTop: 10, paddingBottom: 60 }}
           renderItem={({ item }) => (
-            <ProductTegel product={item} onPress={() => router.push(`/product/${item.id}`)} />
+            <ProductTegel
+              product={item}
+              breedte={tegelBreedte}
+              onPress={() => router.push(`/product/${item.id}`)}
+            />
           )}
           ListEmptyComponent={<Text style={[styles.leegTekst, { padding: 16 }]}>{leegTekst}</Text>}
         />

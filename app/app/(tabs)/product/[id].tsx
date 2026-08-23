@@ -48,6 +48,8 @@ export default function ProductScherm() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  /* Hoogte van de zwevende tabbalk + marge: de winkelmand-balk zweeft daarboven. */
+  const tabRuimte = 62 + Math.max(insets.bottom, 12) + 8;
   const { width: schermBreedte } = useWindowDimensions();
 
   const [producten, setProducten] = useState<ProductCardData[]>([]);
@@ -163,7 +165,7 @@ export default function ProductScherm() {
     voegToeAanMand(product!.id, maat ?? undefined);
     setToegevoegd(true);
     if (toegevoegdTimer.current) clearTimeout(toegevoegdTimer.current);
-    toegevoegdTimer.current = setTimeout(() => setToegevoegd(false), 2000);
+    toegevoegdTimer.current = setTimeout(() => setToegevoegd(false), 6000);
   }
 
   return (
@@ -472,15 +474,26 @@ export default function ProductScherm() {
         </View>
       </View>
 
-      {/* Vaste In winkelmand-knop */}
-      <View style={[styles.mandBalk, { paddingBottom: Math.max(insets.bottom, 14) }]}>
-        <Pressable
-          style={[styles.mandKnop, toegevoegd && styles.mandKnopKlaar]}
-          onPress={inWinkelmand}>
-          <Text style={styles.mandKnopTekst}>
-            {toegevoegd ? 'Toegevoegd aan winkelmand ✓' : 'In winkelmand'}
-          </Text>
-        </Pressable>
+      {/* Vaste In winkelmand-knop, zwevend boven de tabbalk. Na het toevoegen
+          verschijnt er meteen een tweede knop om naar de winkelmand te gaan. */}
+      <View style={[styles.mandBalk, { bottom: tabRuimte, paddingBottom: 12 }]}>
+        <View style={styles.mandRij}>
+          <Pressable
+            style={[styles.mandKnop, toegevoegd && styles.mandKnopKlaar]}
+            onPress={inWinkelmand}>
+            <Text style={styles.mandKnopTekst}>
+              {toegevoegd ? 'Toegevoegd ✓' : 'In winkelmand'}
+            </Text>
+          </Pressable>
+          {toegevoegd && (
+            <Pressable
+              style={styles.naarMandKnop}
+              accessibilityLabel="Naar winkelmand"
+              onPress={() => router.push('/winkelmand')}>
+              <Text style={styles.mandKnopTekst}>Naar winkelmand</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
 
       {/* Schermvullende fotogalerij */}
@@ -955,10 +968,22 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -4 },
     elevation: 10,
   },
+  mandRij: {
+    flexDirection: 'row',
+    gap: 10,
+  },
   mandKnop: {
+    flex: 1,
     backgroundColor: EkoColors.primary,
     paddingVertical: 15,
     alignItems: 'center',
+  },
+  naarMandKnop: {
+    flex: 1,
+    backgroundColor: EkoColors.primary,
+    paddingVertical: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   mandKnopKlaar: {
     backgroundColor: EkoColors.primaryDark,
