@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="nl">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Twee keer EKO Motorwear</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Ubuntu+Mono:wght@400;700&display=swap">
+
+<style>
+  /* ---------------------------------------------------------------
+     Palet uit de huisstijl van de eigen site: navy, oranje, sectiegrijs.
+     De officiële site krijgt een neutrale leikleur in de grafieken —
+     de kleuren van EKO staan apart als bewijsmateriaal, niet als sfeer.
+     --------------------------------------------------------------- */
+  :root{
+    --ground:#ECEDEF;
+    --surface:#FFFFFF;
+    --surface-2:#F5F6F7;
+    --ink:#16232E;
+    --ink-2:#4A5661;
+    --ink-3:#77828C;
+    --line:#D5D9DD;
+    --line-2:#E4E7EA;
+    --accent:#BD5C00;
+    --accent-soft:#FBEEE2;
+    --mine:#BD5C00;
+    --theirs:#6E7B87;
+    --good:#3E6B4F;
+    --warn:#9A5B12;
+    --shadow:0 1px 2px rgba(22,35,46,.06), 0 8px 24px rgba(22,35,46,.06);
+  }
+  /* Bewust één vaste, lichte look: het verslag blijft altijd lichtgrijs (#ECEDEF),
+     ook als het toestel in donkere modus staat. */
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ground);
+    color:var(--ink);
+    font-family:Ubuntu, "Segoe UI", system-ui, sans-serif;
+    font-size:17px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px 96px;}
+
+  /* ---------- kop ---------- */
+  .masthead{
+    padding:72px 0 40px;
+    border-bottom:3px solid var(--ink);
+  }
+  .eyebrow{
+    font-family:Oswald, Impact, sans-serif;
+    font-weight:500;
+    font-size:13px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 18px;
+  }
+  h1{
+    font-family:Oswald, Impact, sans-serif;
+    font-weight:700;
+    font-size:clamp(38px, 7vw, 68px);
+    line-height:1.02;
+    letter-spacing:.01em;
+    text-transform:uppercase;
+    text-wrap:balance;
+    margin:0 0 20px;
+  }
+  .dek{
+    font-size:19px;
+    line-height:1.6;
+    color:var(--ink-2);
+    max-width:62ch;
+    margin:0 0 28px;
+  }
+  .stamp{
+    display:flex;flex-wrap:wrap;gap:8px 28px;
+    font-size:14px;color:var(--ink-3);
+    font-family:"Ubuntu Mono", ui-monospace, monospace;
+  }
+  .stamp b{color:var(--ink-2);font-weight:700;}
+
+  /* ---------- secties ---------- */
+  section{padding:52px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:0;}
+  .chip{
+    display:inline-block;
+    font-family:Oswald, Impact, sans-serif;
+    font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);
+    border:1px solid var(--accent);
+    border-radius:2px;
+    padding:4px 10px;
+    margin:0 0 18px;
+  }
+  h2{
+    font-family:Oswald, Impact, sans-serif;
+    font-weight:600;
+    font-size:clamp(26px, 3.4vw, 36px);
+    line-height:1.12;
+    text-transform:uppercase;
+    letter-spacing:.01em;
+    text-wrap:balance;
+    margin:0 0 18px;
+  }
+  h3{
+    font-family:Oswald, Impact, sans-serif;
+    font-weight:500;
+    font-size:19px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    margin:32px 0 10px;
+  }
+  p{max-width:68ch;margin:0 0 16px;}
+  a{color:var(--accent);}
+  strong{font-weight:700;}
+
+  /* ---------- oordeel ---------- */
+  .verdict{
+    background:var(--surface);
+    border-left:5px solid var(--accent);
+    border-radius:3px;
+    box-shadow:var(--shadow);
+    padding:28px 32px;
+    margin:32px 0 40px;
+  }
+  .verdict p{margin-bottom:0;font-size:18px;}
+  .verdict p + p{margin-top:14px;}
+
+  .kpis{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:2px;
+    background:var(--line-2);
+    border:1px solid var(--line-2);
+    border-radius:3px;
+    overflow:hidden;
+    margin:0 0 8px;
+  }
+  .kpi{background:var(--surface);padding:20px 20px 18px;}
+  .kpi .num{
+    font-family:Oswald, Impact, sans-serif;
+    font-size:38px;font-weight:600;line-height:1;
+    font-variant-numeric:tabular-nums;
+    display:block;margin-bottom:6px;
+  }
+  .kpi .lab{font-size:14px;color:var(--ink-2);line-height:1.45;display:block;}
+
+  /* ---------- vergelijkingsbalken ---------- */
+  .meting{
+    background:var(--surface);
+    border:1px solid var(--line-2);
+    border-radius:3px;
+    padding:22px 24px;
+    margin:24px 0;
+    box-shadow:var(--shadow);
+  }
+  .meting h4{
+    font-family:Ubuntu, sans-serif;
+    font-size:15px;font-weight:700;margin:0 0 4px;
+  }
+  .meting .bron{font-size:13px;color:var(--ink-3);margin:0 0 16px;}
+  .rij{display:grid;grid-template-columns:132px 1fr 90px;align-items:center;gap:14px;margin-bottom:9px;}
+  .rij .naam{font-size:13.5px;color:var(--ink-2);}
+  .baan{background:var(--surface-2);height:22px;border-radius:2px;overflow:hidden;}
+  .baan span{display:block;height:100%;border-radius:2px;}
+  .rij .waarde{
+    font-family:"Ubuntu Mono", ui-monospace, monospace;
+    font-size:14px;font-weight:700;text-align:right;
+    font-variant-numeric:tabular-nums;
+  }
+  .mine span{background:var(--mine);}
+  .theirs span{background:var(--theirs);}
+  .legenda{display:flex;gap:20px;font-size:13px;color:var(--ink-3);margin-top:14px;}
+  .legenda i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px;}
+
+  /* ---------- twee kolommen ---------- */
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--line-2);border:1px solid var(--line-2);border-radius:3px;overflow:hidden;margin:26px 0;}
+  .duo > div{background:var(--surface);padding:22px 24px;}
+  .duo h5{
+    font-family:Oswald, Impact, sans-serif;
+    font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;
+    margin:0 0 12px;
+  }
+  .duo.mine-first > div:first-child h5{color:var(--accent);}
+  .duo > div:last-child h5{color:var(--ink-3);}
+  .duo ul{margin:0;padding-left:18px;}
+  .duo li{margin-bottom:8px;font-size:15.5px;line-height:1.55;}
+  .duo li:last-child{margin-bottom:0;}
+
+  /* ---------- tabel ---------- */
+  .tabelwrap{overflow-x:auto;margin:26px 0;border:1px solid var(--line-2);border-radius:3px;background:var(--surface);}
+  table{border-collapse:collapse;width:100%;min-width:640px;font-size:15px;}
+  th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--line-2);vertical-align:top;}
+  th{
+    font-family:Oswald, Impact, sans-serif;
+    font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;
+    color:var(--ink-2);background:var(--surface-2);
+  }
+  tbody tr:last-child td{border-bottom:0;}
+  td.num{font-family:"Ubuntu Mono", ui-monospace, monospace;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;}
+  .ja{color:var(--good);font-weight:700;}
+  .nee{color:var(--ink-3);}
+
+  /* ---------- kleurenbewijs ---------- */
+  .swatches{display:flex;flex-wrap:wrap;gap:14px;margin:20px 0 8px;}
+  .sw{width:104px;}
+  .sw i{display:block;height:56px;border-radius:3px;border:1px solid var(--line);}
+  .sw b{display:block;font-family:"Ubuntu Mono",monospace;font-size:12px;margin-top:7px;font-weight:700;}
+  .sw em{display:block;font-size:12px;color:var(--ink-3);font-style:normal;line-height:1.35;}
+
+  /* ---------- citaat / opmerking ---------- */
+  .note{
+    background:var(--accent-soft);
+    border-radius:3px;
+    padding:18px 22px;
+    margin:24px 0;
+    font-size:15.5px;
+  }
+  .note p{margin:0;max-width:none;}
+  .note p + p{margin-top:10px;}
+  .note b{font-family:Oswald,Impact,sans-serif;letter-spacing:.06em;text-transform:uppercase;font-size:13px;display:block;margin-bottom:6px;color:var(--accent);}
+
+  ul.lijst{max-width:68ch;padding-left:20px;}
+  ul.lijst li{margin-bottom:10px;}
+
+  footer{padding:44px 0 0;border-top:3px solid var(--ink);margin-top:20px;font-size:14px;color:var(--ink-3);}
+
+  @media (max-width:720px){
+    body{font-size:16px;}
+    .wrap{padding:0 18px 64px;}
+    .masthead{padding:44px 0 30px;}
+    .duo{grid-template-columns:1fr;}
+    .rij{grid-template-columns:104px 1fr 74px;gap:10px;}
+    .verdict{padding:22px 20px;}
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .baan span{transition:width .5s ease;}
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Herexamen Mobile App · YP0833 · Zaynaba Alkodase</p>
+    <h1>Twee keer EKO&nbsp;Motorwear</h1>
+    <p class="dek">Een vergelijking tussen de bestaande webshop van EKO Motorwear en de site die ik voor deze opdracht heb gebouwd — gemeten, niet gevoeld. Per pagina, op acht punten.</p>
+    <div class="stamp">
+      <span><b>Officieel:</b> eko-motorwear.com/nl</span>
+      <span><b>Eigen:</b> eko-exampenopdracht.webflow.io</span>
+      <span><b>Bijgewerkt:</b> na de laatste aanpassingsronde</span>
+    </div>
+  </header>
+
+  <!-- ============ IN ÉÉN OOGOPSLAG ============ -->
+  <section>
+    <span class="chip">In één oogopslag</span>
+    <h2>Het verschil zit niet in de smaak, maar in de hoeveelheid</h2>
+
+    <div class="verdict">
+      <p>De bestaande site probeert álles tegelijk te tonen. De navigatiekop alleen al is <strong>310 pixels hoog</strong> en bevat <strong>690 links</strong> — op elke pagina, op elk toestel. Mijn kop is 96 pixels hoog en bevat er 19.</p>
+      <p>Dat is niet louter een smaakverschil. Het maakt de pagina zwaarder, trager, moeilijker te bedienen met een vinger en moeilijker voor te lezen met een schermlezer. Elk cijfer verderop komt op hetzelfde neer: minder ruis op hetzelfde aanbod.</p>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><span class="num" style="color:var(--theirs)">690</span><span class="lab">links in de kop van de officiële site — tegenover 19 bij mij</span></div>
+      <div class="kpi"><span class="num" style="color:var(--theirs)">195</span><span class="lab">knoppen zonder naam op de homepagina van EKO — 6 bij mij</span></div>
+      <div class="kpi"><span class="num" style="color:var(--theirs)">288</span><span class="lab">tapdoelen kleiner dan 24 px bij EKO — 11 bij mij</span></div>
+      <div class="kpi"><span class="num" style="color:var(--mine)">0</span><span class="lab">pixels horizontaal schuiven op mijn site, van 320 tot 991 px</span></div>
+    </div>
+  </section>
+
+  <!-- ============ METHODE ============ -->
+  <section>
+    <span class="chip">Methode</span>
+    <h2>Hoe ik dit gemeten heb — en wat het niet zegt</h2>
+    <p>Alle cijfers komen uit dezelfde meting, uitgevoerd in dezelfde browser op hetzelfde scherm (1512 × 827 px), op dezelfde dag. Ik tel elementen, links, afbeeldingen zonder alt-tekst, knoppen zonder toegankelijke naam en klikvlakken kleiner dan 24 × 24 pixels rechtstreeks uit de opgebouwde pagina, en lees de laadtijd uit de <em>Navigation Timing</em> van de browser.</p>
+
+    <div class="note">
+      <p><b>Wat deze vergelijking niet zegt</b></p>
+      <p><strong>De catalogus is niet vergelijkbaar.</strong> De webshop van EKO draait op duizenden echte producten met voorraad, maten en prijzen. De mijne bevat 25 producten als voorbeeld. Een deel van die complexiteit is dus geen slordigheid maar een gevolg van een échte winkel — dat weeg ik verderop expliciet mee.</p>
+      <p><strong>De laadtijden zijn één meting per pagina</strong>, geen labtest met een leeg cachegeheugen. Ze geven een orde van grootte aan, geen exact getal. De structuurcijfers (elementen, links, alt-teksten) zijn dat wél: die hangen niet van het netwerk af.</p>
+      <p><strong>Het mobiele gedrag van de officiële site kon ik niet op ware breedte meten</strong>, omdat ik dat venster niet kon verkleinen. Wat ik daar zeg, komt uit de stijlbladen en de opgebouwde pagina van EKO, en dat vermeld ik ter plaatse.</p>
+    </div>
+  </section>
+
+  <!-- ============ NAVIGATIEBALK ============ -->
+  <section>
+    <span class="chip">Navigatiebalk</span>
+    <h2>Vier balken boven elkaar, voor er iets te zien is</h2>
+
+    <p>De officiële site stapelt vier lagen op elkaar voordat de inhoud begint: een zwarte USP-balk met zes items en een taalkeuze (NL / FR / EN), dan het logo met een tweede menu en de zoekbalk, dan de categoriebalk, en dan nog een kruimelpad. Samen <strong>310 pixels</strong>. Op de homepagina staat in dat kruimelpad één woord: <em>Home</em> — een pad naar de pagina waar je al bent.</p>
+
+    <div class="meting">
+      <h4>Hoogte van de kop en aantal links erin</h4>
+      <p class="bron">Gemeten op de homepagina, 1512 px breed</p>
+      <div class="rij"><span class="naam">Kophoogte — EKO</span><span class="baan theirs"><span style="width:100%"></span></span><span class="waarde">310 px</span></div>
+      <div class="rij"><span class="naam">Kophoogte — mijn</span><span class="baan mine"><span style="width:31%"></span></span><span class="waarde">96 px</span></div>
+      <div class="rij"><span class="naam">Links in kop — EKO</span><span class="baan theirs"><span style="width:100%"></span></span><span class="waarde">690</span></div>
+      <div class="rij"><span class="naam">Links in kop — mijn</span><span class="baan mine"><span style="width:2.8%"></span></span><span class="waarde">19</span></div>
+      <div class="legenda"><span><i style="background:var(--mine)"></i>Eigen site</span><span><i style="background:var(--theirs)"></i>Officiële site</span></div>
+    </div>
+
+    <p>Die 690 links zijn het megamenu: de volledige categorieboom — van <em>Motorjassen</em> tot <em>Waterdichte (Gore-Tex) motorjas</em> tot <em>Helmmuts / Buff</em> — staat volledig in de pagina, op élke pagina, ook al zie je er hooguit negen. Ze worden meegestuurd naar elke bezoeker, ook op een telefoon.</p>
+
+    <div class="duo mine-first">
+      <div>
+        <h5>Mijn aanpak</h5>
+        <ul>
+          <li>Eén balk van 96 px, doorzichtig over de hero.</li>
+          <li>Menu achter één knop; de categorieboom wordt pas opgebouwd als je hem opent.</li>
+          <li>19 links in de kop: menu, logo, zoeken, account, verlanglijst, winkelmand.</li>
+          <li>Zoekbalk verdwijnt op pagina's die zelf al een zoekveld hebben (blog, zoekresultaten, voorwaarden).</li>
+        </ul>
+      </div>
+      <div>
+        <h5>Officiële site</h5>
+        <ul>
+          <li>Vier lagen, samen 310 px, op elke pagina zichtbaar.</li>
+          <li>Volledig megamenu in de HTML: 690 links, altijd meegestuurd.</li>
+          <li>Twee menu's naast elkaar: <em>Onze visie / Onze winkel / Cadeaubon / Mijn moto / Contact / Blog</em> boven, categorieën eronder.</li>
+          <li><em>Cadeaubon</em> staat twee keer in dezelfde kop, in beide menu's.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOMEPAGINA ============ -->
+  <section>
+    <span class="chip">Homepagina</span>
+    <h2>Eén beeld tegenover elf gelijktijdige boodschappen</h2>
+
+    <p>De homepagina van EKO opent met een raster promotietegels: 15 % korting, Macna Dry Cooling Gilet, Schuberth C5 ANC, motorbagage, Roadlok schijfremslot — allemaal even groot, allemaal even luid, elk met een eigen tekstlabel op de foto geplakt. Er is geen eerste boodschap; er zijn er elf tegelijk. Dat is wat "chaotisch" concreet betekent: <strong>766 links en 2.453 elementen</strong> op één scherm.</p>
+
+    <div class="meting">
+      <h4>Homepagina — omvang van de pagina</h4>
+      <p class="bron">Elementen en links in de opgebouwde pagina</p>
+      <div class="rij"><span class="naam">Elementen — EKO</span><span class="baan theirs"><span style="width:100%"></span></span><span class="waarde">2 453</span></div>
+      <div class="rij"><span class="naam">Elementen — mijn</span><span class="baan mine"><span style="width:32%"></span></span><span class="waarde">787</span></div>
+      <div class="rij"><span class="naam">Links — EKO</span><span class="baan theirs"><span style="width:100%"></span></span><span class="waarde">766</span></div>
+      <div class="rij"><span class="naam">Links — mijn</span><span class="baan mine"><span style="width:18.5%"></span></span><span class="waarde">142</span></div>
+      <div class="rij"><span class="naam">Laadtijd — EKO</span><span class="baan theirs"><span style="width:100%"></span></span><span class="waarde">2 128 ms</span></div>
+      <div class="rij"><span class="naam">Laadtijd — mijn</span><span class="baan mine"><span style="width:34%"></span></span><span class="waarde">727 ms</span></div>
+      <div class="legenda"><span><i style="background:var(--mine)"></i>Eigen site</span><span><i style="background:var(--theirs)"></i>Officiële site</span></div>
+    </div>
+
+    <p>Mijn homepagina opent met één schermvullende foto, het logo en één zoekveld. Daaronder komt de inhoud in rustige secties: uitgelichte producten, categorieën, advies, merken, contact. Beide pagina's zijn ongeveer even lang (4.757 tegenover 4.861 px) — het verschil zit niet in hoeveel er staat, maar in hoeveel er tegelijk om aandacht vraagt.</p>
+  </section>
+
+  <!-- ============ PRODUCTPAGINA ============ -->
+  <section>
+    <span class="chip">Productpagina</span>
+    <h2>De prijs hoort niet onder de vouw te staan</h2>
+
+    <p>Op de productpagina van EKO (Belstaff Stour Leder, € 1.195) staat de prijs op <strong>795 pixels</strong> van boven, bij een schermhoogte van 827. Je ziet hem dus net niet, en de knop <em>Voeg toe aan winkelkarretje</em> staat daar nóg onder — je moet scrollen om te weten wat het kost en om het te kunnen kopen. Links onder de foto blijft ondertussen een halve schermbreedte wit.</p>
+
+    <div class="meting">
+      <h4>Waar staat de koopknop?</h4>
+      <p class="bron">Afstand tot de bovenkant van de pagina, bij een venster van 827 px hoog</p>
+      <div class="rij"><span class="naam">Knop — EKO</span><span class="baan theirs"><span style="width:100%"></span></span><span class="waarde">± 1 000 px</span></div>
+      <div class="rij"><span class="naam">Knop — mijn</span><span class="baan mine"><span style="width:67%"></span></span><span class="waarde">668 px</span></div>
+      <div class="rij"><span class="naam">Vouw (schermrand)</span><span class="baan" style="background:transparent;border-bottom:2px dashed var(--ink-3)"><span style="width:0"></span></span><span class="waarde">827 px</span></div>
+      <div class="legenda"><span><i style="background:var(--mine)"></i>Eigen site</span><span><i style="background:var(--theirs)"></i>Officiële site</span></div>
+    </div>
+
+    <h3>De adressen van de producten</h3>
+    <p>De productadressen van EKO dragen een interne code van veertien cijfers mee:</p>
+    <div class="tabelwrap">
+      <table>
+        <thead><tr><th>Site</th><th>Adres van een productpagina</th></tr></thead>
+        <tbody>
+          <tr><td>Officieel</td><td><code style="font-family:'Ubuntu Mono',monospace;font-size:13.5px">/nl/motorkledij/jassen/11464601040101/stour-leder/</code></td></tr>
+          <tr><td>Eigen</td><td><code style="font-family:'Ubuntu Mono',monospace;font-size:13.5px">/product/motorlaarzen-corozal-v2-drystar</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Zo'n adres is niet voor te lezen aan de telefoon, niet te onthouden en niet te delen zonder uit te leggen wat het is. Voor zoekmachines zegt <em>11464601040101</em> ook niets.</p>
+
+    <div class="duo mine-first">
+      <div>
+        <h5>Mijn productpagina</h5>
+        <ul>
+          <li>Foto's links, alles wat je nodig hebt om te kopen rechts: prijs, kleur, maat, knop — samen boven de vouw.</li>
+          <li>797 elementen, 105 links.</li>
+          <li>Uitklapblok met samenstelling en specificaties uit een eigen CMS-veld.</li>
+          <li>Kruimelpad Home / Winkel / Categorie / product.</li>
+        </ul>
+      </div>
+      <div>
+        <h5>Officiële productpagina</h5>
+        <ul>
+          <li>Prijs op de schermrand, koopknop eronder.</li>
+          <li>2 304 elementen, 742 links — waarvan 690 uit het megamenu.</li>
+          <li>Maten XXS tot 5XL altijd getoond, ook wat er niet is.</li>
+          <li>Sterk: kleurvarianten, maattabel en <em>Meer vragen over dit product?</em></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CATEGORIE ============ -->
+  <section>
+    <span class="chip">Categoriepagina</span>
+    <h2>Woorden die middenin afbreken</h2>
+
+    <p>Op de categoriepagina <em>Motorkledij</em> van EKO breekt de productnaam middenin een woord af: <strong>"Rugprotector Macna L2 C&nbsp;/ entral"</strong>. Dat gebeurt bij elke naam die net te lang is voor de kolom, en het staat twee keer naast elkaar in hetzelfde raster. Verder valt op dat bij het eerste opbouwen de naam en de prijs er al staan terwijl de foto's nog blanco zijn — de kaart vult zich van onder naar boven.</p>
+
+    <div class="meting">
+      <h4>Categoriepagina — omvang</h4>
+      <p class="bron">De /nl/motorkledij/ van EKO tegenover mijn /category/motorkledij</p>
+      <div class="rij"><span class="naam">Elementen — EKO</span><span class="baan theirs"><span style="width:100%"></span></span><span class="waarde">3 012</span></div>
+      <div class="rij"><span class="naam">Elementen — mijn</span><span class="baan mine"><span style="width:34%"></span></span><span class="waarde">1 037</span></div>
+      <div class="rij"><span class="naam">Overgedragen — EKO</span><span class="baan theirs"><span style="width:100%"></span></span><span class="waarde">3,7 MB</span></div>
+      <div class="legenda"><span><i style="background:var(--mine)"></i>Eigen site</span><span><i style="background:var(--theirs)"></i>Officiële site</span></div>
+    </div>
+
+    <div class="note"><p><b>Ter nuance</b>Het raster van EKO toont echte voorraad uit een echte winkel; het mijne toont zes voorbeeldproducten. Het aantal elementen is dus deels een gevolg van de catalogus. Wat níét met de catalogus te maken heeft, is het afbreken van woorden, het late laden van de foto's, en de sorteerknop die eenzaam ver boven het raster zweeft.</p></div>
+  </section>
+
+  <!-- ============ BLOG ============ -->
+  <section>
+    <span class="chip">Blog</span>
+    <h2>Een kaart die alleen een foto is</h2>
+
+    <p>De blogkaarten van EKO zijn foto's met de titel eróver gedrukt. Geen datum, geen categorie, geen samenvatting. Bij het eerste artikel staat witte tekst op een lichte weg, wat het bijna onleesbaar maakt. De tweede kaart is felblauw, de derde een foto, de vierde weer anders — er is geen kaartvorm, alleen beeld.</p>
+
+    <p>Technisch verraadt zich dat in één cijfer: op de hele blogpagina van EKO staat <strong>één <code style="font-family:'Ubuntu Mono',monospace">&lt;img&gt;</code>-element</strong>. Alle andere afbeeldingen zijn CSS-achtergronden. Die hebben geen alt-tekst, worden niet meegenomen door zoekmachines en bestaan niet voor een schermlezer.</p>
+
+    <div class="tabelwrap">
+      <table>
+        <thead><tr><th>Wat staat er op een blogkaart?</th><th>Officieel</th><th>Eigen</th></tr></thead>
+        <tbody>
+          <tr><td>Foto als echte afbeelding met alt-tekst</td><td class="nee">nee — CSS-achtergrond</td><td class="ja">ja</td></tr>
+          <tr><td>Categorie</td><td class="nee">nee</td><td class="ja">ja, oranje label</td></tr>
+          <tr><td>Datum</td><td class="nee">nee</td><td class="ja">ja, in het Nederlands</td></tr>
+          <tr><td>Samenvatting</td><td class="nee">nee</td><td class="ja">ja</td></tr>
+          <tr><td>Duidelijke leeslink</td><td class="nee">een pijltje op de foto</td><td class="ja">Lees verder →</td></tr>
+          <tr><td>Zoeken binnen de blog</td><td class="nee">nee</td><td class="ja">ja, over alle pagina's heen</td></tr>
+          <tr><td>Filteren op categorie</td><td class="ja">ja, via een keuzelijst</td><td class="ja">ja, via categorieknoppen</td></tr>
+          <tr><td class="num">Elementen op de pagina</td><td class="num">2 363</td><td class="num">394</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ MOBIEL ============ -->
+  <section>
+    <span class="chip">Mobiel gedrag</span>
+    <h2>Getest op vijf breedtes, van 320 tot 991 pixels</h2>
+
+    <p>Mijn site heb ik op elke aangepaste pagina nagemeten op 320, 375, 414, 768 en 991 pixels breed. Op geen enkele breedte schuift de pagina horizontaal — de meting vergelijkt de scrollbreedte met de zichtbare breedte en het verschil is telkens nul. De paginatitel, de oranje streep en de introzin staan overal links op 16 pixels van de rand. Het zoekveld in de zoekresultaten loopt onder 768 px over de volle breedte in plaats van rechts te blijven hangen.</p>
+
+    <div class="note">
+      <p><b>Wat ik over het mobiele gedrag van EKO wél en niet kan zeggen</b></p>
+      <p>Ik kon het venster van de officiële site niet verkleinen, dus ik heb de mobiele weergave van EKO niet met eigen ogen op 375 px gezien. Wat ik wel kon lezen: het stijlblad van EKO gebruikt de standaard Bootstrap-breekpunten (576, 768, 992, 1200, 1600 px), er is een mobiel menu aanwezig, en de meta-tag <code style="font-family:'Ubuntu Mono',monospace">viewport</code> staat correct. De site is dus responsief opgezet.</p>
+      <p>Wat wél zeker is en niet van de vensterbreedte afhangt: <strong>dat megamenu van 690 links wordt ook naar elke telefoon gestuurd</strong>, en er staan al op een groot scherm <strong>288 klikvlakken kleiner dan 24 × 24 pixels</strong>. Op een klein scherm worden zulke doelen zelden groter.</p>
+    </div>
+  </section>
+
+  <!-- ============ SNELHEID ============ -->
+  <section>
+    <span class="chip">Snelheid</span>
+    <h2>Drie keer sneller klaar, met een derde van de onderdelen</h2>
+
+    <div class="tabelwrap">
+      <table>
+        <thead>
+          <tr><th>Pagina</th><th class="num">Laadtijd</th><th class="num">Verzoeken</th><th class="num">Elementen</th><th class="num">Links</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Home</strong> — officieel</td><td class="num">2 128 ms</td><td class="num">47</td><td class="num">2 453</td><td class="num">766</td></tr>
+          <tr><td><strong>Home</strong> — eigen</td><td class="num">727 ms</td><td class="num">56</td><td class="num">787</td><td class="num">142</td></tr>
+          <tr><td><strong>Categorie</strong> — officieel</td><td class="num">1 452 ms</td><td class="num">57</td><td class="num">3 012</td><td class="num">840</td></tr>
+          <tr><td><strong>Categorie</strong> — eigen</td><td class="num">362 ms</td><td class="num">63</td><td class="num">1 037</td><td class="num">134</td></tr>
+          <tr><td><strong>Product</strong> — officieel</td><td class="num">1 279 ms</td><td class="num">51</td><td class="num">2 304</td><td class="num">742</td></tr>
+          <tr><td><strong>Product</strong> — eigen</td><td class="num">1 315 ms</td><td class="num">44</td><td class="num">797</td><td class="num">105</td></tr>
+          <tr><td><strong>Blog</strong> — officieel</td><td class="num">739 ms</td><td class="num">42</td><td class="num">2 363</td><td class="num">772</td></tr>
+          <tr><td><strong>Blog</strong> — eigen</td><td class="num">391 ms</td><td class="num">50</td><td class="num">394</td><td class="num">84</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Eén cijfer wijkt af van de rest: mijn productpagina is met 1.315 ms even traag als die van EKO. Dat is een bewuste keuze van mij — die pagina haalt de foto's en gegevens op bij Webflow en bouwt de fotokolom en het uitklapblok daarna op. Het aantal verzoeken ligt bij mij soms hóger; het aantal onderdelen dat de browser moet tekenen ligt telkens twee tot zes keer lager.</p>
+  </section>
+
+  <!-- ============ TOEGANKELIJKHEID ============ -->
+  <section>
+    <span class="chip">Toegankelijkheid</span>
+    <h2>Knoppen zonder naam en doelen te klein voor een duim</h2>
+
+    <p>Twee dingen zijn objectief te tellen. Een knop of link <em>zonder naam</em> is er een zonder zichtbare tekst, zonder <code style="font-family:'Ubuntu Mono',monospace">aria-label</code> en zonder <code style="font-family:'Ubuntu Mono',monospace">title</code>: een schermlezer noemt hem dan "link" en verder niets. En de richtlijn WCAG&nbsp;2.2 vraagt klikvlakken van minstens 24 × 24 pixels.</p>
+
+    <div class="meting">
+      <h4>Knoppen en links zonder toegankelijke naam</h4>
+      <p class="bron">Per pagina geteld</p>
+      <div class="rij"><span class="naam">Home — EKO</span><span class="baan theirs"><span style="width:100%"></span></span><span class="waarde">195</span></div>
+      <div class="rij"><span class="naam">Home — mijn</span><span class="baan mine"><span style="width:3%"></span></span><span class="waarde">6</span></div>
+      <div class="rij"><span class="naam">Blog — EKO</span><span class="baan theirs"><span style="width:92%"></span></span><span class="waarde">179</span></div>
+      <div class="rij"><span class="naam">Blog — mijn</span><span class="baan mine"><span style="width:3%"></span></span><span class="waarde">6</span></div>
+      <div class="legenda"><span><i style="background:var(--mine)"></i>Eigen site</span><span><i style="background:var(--theirs)"></i>Officiële site</span></div>
+    </div>
+
+    <div class="meting">
+      <h4>Klikvlakken kleiner dan 24 × 24 px</h4>
+      <p class="bron">Per pagina geteld, op 1512 px breed</p>
+      <div class="rij"><span class="naam">Home — EKO</span><span class="baan theirs"><span style="width:100%"></span></span><span class="waarde">288</span></div>
+      <div class="rij"><span class="naam">Home — mijn</span><span class="baan mine"><span style="width:3.8%"></span></span><span class="waarde">11</span></div>
+      <div class="rij"><span class="naam">Blog — EKO</span><span class="baan theirs"><span style="width:97%"></span></span><span class="waarde">280</span></div>
+      <div class="rij"><span class="naam">Blog — mijn</span><span class="baan mine"><span style="width:4.2%"></span></span><span class="waarde">12</span></div>
+      <div class="legenda"><span><i style="background:var(--mine)"></i>Eigen site</span><span><i style="background:var(--theirs)"></i>Officiële site</span></div>
+    </div>
+
+    <p>Beide sites hebben op elke pagina precies één <code style="font-family:'Ubuntu Mono',monospace">&lt;h1&gt;</code>, en beide zetten de taal correct op <code style="font-family:'Ubuntu Mono',monospace">nl</code>. Op alt-teksten scoren we allebei matig: de homepagina van EKO heeft er vijf zonder, de mijne twee, en mijn categoriepagina vijf. Dat laatste is werk dat ik nog moet doen.</p>
+
+    <p>Wat ik tijdens deze opdracht bewust heb toegevoegd: de categorieknoppen op de blog zijn bereikbaar met de tab-toets, reageren op Enter en spatie, hebben een zichtbare focusrand in de accentkleur, en de melding "Geen artikels gevonden" is een <code style="font-family:'Ubuntu Mono',monospace">role="status"</code> zodat een schermlezer ze meldt.</p>
+  </section>
+
+  <!-- ============ HUISSTIJL ============ -->
+  <section>
+    <span class="chip">Huisstijl</span>
+    <h2>Vier accentkleuren tegenover één</h2>
+
+    <p>Het duidelijkste verschil zie je in de kleuren. Op één bezoek aan de officiële site kwam ik vier verschillende accentkleuren tegen, geen ervan afkomstig uit het eigen logo van EKO — dat is zwart.</p>
+
+    <div class="swatches">
+      <div class="sw"><i style="background:#F5FE0D"></i><b>#F5FE0D</b><em>Koopknop en SALE-label</em></div>
+      <div class="sw"><i style="background:#D93025"></i><b>rood</b><em>Kader rond "− 15 %"</em></div>
+      <div class="sw"><i style="background:#E2761B"></i><b>oranje</b><em>Merkbadge Schuberth</em></div>
+      <div class="sw"><i style="background:#1A7FC1"></i><b>blauw</b><em>Achtergrond blogkaart</em></div>
+      <div class="sw"><i style="background:#11191F"></i><b>#11191F</b><em>Balk bovenaan</em></div>
+    </div>
+
+    <p>De koopknop is neongeel <code style="font-family:'Ubuntu Mono',monospace">rgb(245, 254, 13)</code> met donkere tekst. Het contrast is met 14:1 uitstekend — het is dus geen leesbaarheidsprobleem, maar een identiteitsprobleem: die kleur komt nergens anders in het merk terug.</p>
+
+    <div class="swatches">
+      <div class="sw"><i style="background:#16232E"></i><b>#16232E</b><em>Navy — tekst, footer, knoppen</em></div>
+      <div class="sw"><i style="background:#BD5C00"></i><b>#BD5C00</b><em>Oranje — het enige accent</em></div>
+      <div class="sw"><i style="background:#ECEDEF"></i><b>#ECEDEF</b><em>Sectiegrijs</em></div>
+    </div>
+
+    <p>Mijn site draait op drie kleuren en twee lettertypes: <strong>Oswald</strong> voor koppen, <strong>Ubuntu</strong> voor lopende tekst. Elke pagina begint met dezelfde witte kop: oranje streep, titel, introzin. Elke accentkleur op de site is dezelfde oranje.</p>
+
+    <div class="note">
+      <p><b>Waar EKO het beter doet</b></p>
+      <p>De officiële site draait op <strong>één lettertype</strong>, Exo 2, consequent van kop tot voettekst. Mijn site laadt er twee, plus de icoonfonts van Webflow. Wie enkel naar typografische consistentie kijkt, geeft EKO het punt.</p>
+    </div>
+  </section>
+
+  <!-- ============ BRANDKEUZE ============ -->
+  <section>
+    <span class="chip">Brandkeuze</span>
+    <h2>Waarom oranje, navy, grijs en wit</h2>
+
+    <p>Mijn palet is geen willekeurige smaakkeuze, maar een reeks beslissingen die ik hier verantwoord. Het vertrekpunt was het merk zelf: het originele EKO-logo is zwart, en de roest-oranje tint die op enkele plaatsen op de officiële site opduikt, is het enige dat in de buurt van een merkkleur komt. Die twee gegevens heb ik aangescherpt tot vier vaste kleuren met elk één taak.</p>
+
+    <div class="swatches">
+      <div class="sw"><i style="background:#BD5C00"></i><b>#BD5C00</b><em>Oranje — het enige accent: knoppen, links, huidige kruimel</em></div>
+      <div class="sw"><i style="background:#16232E"></i><b>#16232E</b><em>Navy — koppen, navigatie, footer, knoptekst</em></div>
+      <div class="sw"><i style="background:#ECEDEF"></i><b>#ECEDEF</b><em>Sectiegrijs — rustige achtergrond achter witte kaarten</em></div>
+      <div class="sw"><i style="background:#FFFFFF;border:1px solid var(--line)"></i><b>#FFFFFF</b><em>Wit — basis, kaarten, tekst op donkere vlakken</em></div>
+    </div>
+
+    <p><strong>Oranje #BD5C00</strong> is een donkerder gemaakte versie van dat roest-oranje. Niet om esthetische redenen, maar om een meetbare: witte tekst op het origineel haalt een contrast van 4,3:1 en zakt daarmee net onder de WCAG-AA-grens; op mijn donkerdere variant is dat 4,5:1 — er net boven. Voor hover gebruik ik nog een stap donkerder (#9A4A00), zodat de kleurverandering voelbaar is zonder van kleur te wisselen. <strong>Navy #16232E</strong> verving het zwart van het logo: het blijft even donker en technisch, maar oogt minder hard en laat het oranje meer opvallen; witte tekst op navy haalt 16:1. <strong>Sectiegrijs #ECEDEF</strong> bestaat omdat een site die alleen wit is, geen diepte heeft: witte kaarten en koppen komen op dat grijs los te liggen zonder dat ik randen of schaduwen nodig heb. En <strong>wit</strong> is bewust de hoofdkleur gebleven — de kleding op de productfoto's moet de aandacht krijgen, niet de vlakken eromheen.</p>
+
+    <p><strong>Logo en favicon</strong> heb ik in dezelfde beweging meegenomen. Het zwarte origineel hertekende ik in vaste uitvoeringen — donker voor lichte ondergronden, wit voor de navy footer, en een oranje accentversie — plus een apart klein merkicoon, zodat het logo op elke ondergrond werkt zonder telkens opnieuw geknutseld te worden. Van dat merkicoon maakte ik ook een eigen favicon in navy en oranje, die nu live op de site staat (het bestand <code style="font-family:'Ubuntu Mono',monospace">eko-favicon-navy-oranje.png</code> is als site-icoon ingesteld, met een volledige set van 16 tot 512 pixels in mijn huisstijlmap). Klein detail, groot verschil: het browsertabblad draagt nu het merk in plaats van een standaardicoontje.</p>
+
+    <div class="note">
+      <p><b>Dezelfde keuzes, twee producten</b></p>
+      <p>Deze vier kleuren en de twee lettertypes (Oswald voor koppen, Ubuntu voor lopende tekst) staan als constanten in mijn React Native-app (<code style="font-family:'Ubuntu Mono',monospace">constants/eko-theme.ts</code>), gesynct met de site. Wie van de website naar de app gaat, blijft in hetzelfde merk.</p>
+    </div>
+  </section>
+
+  <!-- ============ PAGINA VOOR PAGINA ============ -->
+  <section>
+    <span class="chip">Pagina voor pagina</span>
+    <h2>Wat elke site wel en niet heeft</h2>
+
+    <div class="tabelwrap">
+      <table>
+        <thead><tr><th>Pagina</th><th>Officieel</th><th>Eigen</th><th>Opmerking</th></tr></thead>
+        <tbody>
+          <tr><td>Home</td><td class="ja">ja</td><td class="ja">ja</td><td>EKO: promotieraster. Ik: één hero, dan rustige secties.</td></tr>
+          <tr><td>Winkel / overzicht</td><td class="ja">ja</td><td class="ja">ja</td><td>EKO via het megamenu, ik via één winkelpagina met categorietegels.</td></tr>
+          <tr><td>Categoriepagina</td><td class="ja">ja</td><td class="ja">ja</td><td>Beide met filters en sorteren.</td></tr>
+          <tr><td>Productpagina</td><td class="ja">ja</td><td class="ja">ja</td><td>Bij mij staat de koopknop boven de vouw.</td></tr>
+          <tr><td>Zoekresultaten</td><td class="ja">ja</td><td class="ja">ja</td><td>Bij mij met filters, sorteren en een tweede tabblad voor pagina's en blogartikels.</td></tr>
+          <tr><td>Blog + artikel</td><td class="ja">ja</td><td class="ja">ja</td><td>Bij mij met datum, categorie, samenvatting en "Lees ook".</td></tr>
+          <tr><td>Contact</td><td class="ja">ja</td><td class="ja">ja</td><td></td></tr>
+          <tr><td>Over ons / visie</td><td class="ja">ja</td><td class="ja">ja</td><td></td></tr>
+          <tr><td>Diensten</td><td class="nee">deels</td><td class="ja">ja</td><td>Herstellingen, ozonreiniging, cadeaubonnen op één pagina.</td></tr>
+          <tr><td>Galerij</td><td class="nee">nee</td><td class="ja">ja</td><td>Met lightbox, ook bedienbaar op mobiel.</td></tr>
+          <tr><td>Veelgestelde vragen</td><td class="nee">nee</td><td class="ja">ja</td><td>Met eigen zoekveld en markeren van de zoekterm.</td></tr>
+          <tr><td>Mijn account met dashboard</td><td class="ja">ja</td><td class="ja">ja</td><td>Bij mij: gegevens, bestellingen, retouren, verlanglijst, voorkeuren.</td></tr>
+          <tr><td>Retour aanmelden</td><td class="ja">ja</td><td class="ja">ja</td><td>Bij mij ook zonder account, met ordernummer.</td></tr>
+          <tr><td>Wachtwoord vergeten</td><td class="ja">ja</td><td class="ja">ja</td><td>Bij mij in drie stappen, met een link die 30 minuten geldig is.</td></tr>
+          <tr><td>Winkelmand en afrekenen</td><td class="ja">ja</td><td class="ja">ja</td><td></td></tr>
+          <tr><td>Cadeaubon</td><td class="ja">ja</td><td class="ja">ja</td><td></td></tr>
+          <tr><td>Mijn moto</td><td class="ja">ja</td><td class="nee">nee</td><td>EKO laat je je motor opslaan om op te filteren. Dat heb ik niet.</td></tr>
+          <tr><td>Drie talen (NL / FR / EN)</td><td class="ja">ja</td><td class="nee">nee</td><td>Mijn site is eentalig Nederlands.</td></tr>
+          <tr><td>Minigame</td><td class="nee">nee</td><td class="ja">ja</td><td>In de app.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ WAT EKO BETER DOET ============ -->
+  <section>
+    <span class="chip">Eerlijk vergelijken</span>
+    <h2>Wat de officiële site beter doet dan de mijne</h2>
+
+    <p>Een vergelijking waarin de eigen site op elk punt wint, is geen analyse maar een reclamefolder. Dit doet EKO beter:</p>
+
+    <ul class="lijst">
+      <li><strong>Een echte catalogus.</strong> Duizenden producten met voorraad, maten, kleurvarianten en een maattabel. De mijne bevat er 25 als voorbeeld. Een groot deel van die complexiteit is de prijs van een échte winkel — die kritiek moet ik dus voorzichtig doseren.</li>
+      <li><strong>Drie talen.</strong> NL, FR en EN, met een taalkeuze bovenaan. In een land met een taalgrens is dat een duidelijk sterk punt.</li>
+      <li><strong>Eén lettertype, overal.</strong> Exo 2, van kop tot voettekst. Typografisch consequenter dan mijn twee families plus icoonfonts.</li>
+      <li><strong>De USP-balk bovenaan.</strong> Levering, gratis verzending vanaf € 40, retour aanvragen, winkel in Kontich, telefonisch bereikbaar, openingsuren — meteen zichtbaar. Het kost ruimte, maar het beantwoordt de vragen die een klant écht heeft voor hij koopt.</li>
+      <li><strong>Een volledig kruimelpad</strong> tot in de subcategorie: Home / Motorkledij / Jassen / Stour Leder.</li>
+      <li><strong>Mijn moto.</strong> Je motor opslaan en daarop filteren — een functie die ik niet heb.</li>
+      <li><strong>Cookiebeheer</strong> is aanwezig en bereikbaar via een vaste knop.</li>
+    </ul>
+  </section>
+
+  <!-- ============ WAT IK NOG MOET DOEN ============ -->
+  <!-- ============ BIJGEWERKT ============ -->
+  <section>
+    <span class="chip">Bijgewerkt</span>
+    <h2>Wat er sinds de eerste meting veranderd is</h2>
+    <p>Tussen de eerste meting en dit bijgewerkte verslag heb ik nog een volledige
+    aanpassingsronde gedaan. De cijfers hierboven heb ik laten staan zoals ik ze
+    's middags gemeten heb; wat hieronder staat, komt daar bovenop.</p>
+    <ul>
+      <li><strong>De blog draagt nu de volledige inhoud.</strong> Alle twaalf artikelen heb ik
+      herbouwd op basis van de echte tegenhanger op de offici&euml;le site: de volledige
+      teksten met tussenkoppen, alinea's en opsommingen, plus 21 originele afbeeldingen
+      uit die artikelen (met alt-tekst). Waar mijn blog eerst korte samenvattingen
+      toonde, staat nu dezelfde inhoud als op de offici&euml;le site &mdash; maar in de rustige opmaak.</li>
+      <li><strong>De winkel werkt in niveaus, zoals de warenhuisstructuur van EKO.</strong> Een
+      hoofdcategorie is nu een tegelpagina (kies een onderdeel), en pas wie doorklikt
+      krijgt de producten met filters. De tegels staan er meteen; voorheen verschenen
+      ze traag, &eacute;&eacute;n voor &eacute;&eacute;n.</li>
+      <li><strong>Kruimelpaden overal, met &eacute;&eacute;n taal.</strong> Ook op blog, blogcategorie en
+      artikel staat nu een volledig pad (Home / Blog / categorie / titel), en overal
+      markeert oranje de huidige stap. Het "volledige kruimelpad" dat ik als sterk punt
+      van h&uacute;n site noemde, heb ik daarmee overgenomen.</li>
+      <li><strong>Zoeken op de blog is losgekoppeld van de categoriefilter.</strong> Een trefwoord
+      zoekt door titels, samenvattingen, categorie&euml;n &eacute;n de volledige artikeltekst, met
+      tabbladen (Artikels / Categorie&euml;n) zoals op de productzoekpagina.</li>
+      <li><strong>Een echte mobiele bug gevonden en opgelost.</strong> Wie terugkeerde met de
+      terugknop kreeg een onzichtbare pagina: de browser herstelde de pagina uit zijn
+      cache, bevroren in de uitvaagtoestand van de pagina-overgang. De overgang zet de
+      herstelde pagina nu meteen weer op zichtbaar.</li>
+      <li><strong>Het hamburgermenu is opgeruimd.</strong> Kleinere tekst, pijlen alleen bij rijen
+      die echt een zijpaneel openen, het logo klikbaar naar home, en de cadeaubon-rij
+      springt naar de cadeaubonsectie in plaats van naar een hele pagina.</li>
+      <li><strong>Alle keuzelijsten in de huisstijl.</strong> De combo-klasse Keuzeveld (eigen
+      chevron, oranje rand bij aanwijzen en focus) staat nu op retour, registratie en
+      profiel. De open optielijst blijft van het besturingssysteem; dat kan CSS niet
+      overnemen.</li>
+      <li><strong>De maatkeuze op productkaarten gedraagt zich.</strong> In de schuifbanden werd
+      het maatvenster afgeknipt en bij scrollen bleef het zweven; het staat nu vast op
+      het scherm naast zijn knop en sluit zodra er gescrold wordt.</li>
+      <li><strong>Meer lucht boven de footer</strong> op de categorie-, zoek- en productpagina
+      (90 pixels, 60 op telefoon), en de wachtwoord-herstelroute werkt aantoonbaar van
+      begin tot eind.</li>
+    </ul>
+    <p>Na die ronde heb ik alles opnieuw gecontroleerd: twintig pagina's op 390 pixels
+    en de zes belangrijkste op 834 pixels zonder &eacute;&eacute;n horizontale overflow, en nul
+    JavaScript-fouten van de site over 26 paginaladingen.</p>
+  </section>
+
+  <section>
+    <span class="chip">Eigen werkpunten</span>
+    <h2>Wat op mijn site nog niet klopt</h2>
+
+    <ul class="lijst">
+      <li><strong>Alt-teksten.</strong> Twee ontbrekende op de homepagina, vijf op de categoriepagina. Dat is precies de kritiek die ik op de blog van EKO geef, dus die moet ik eerst bij mezelf oplossen.</li>
+      <li><strong>Zes tot negentien knoppen zonder toegankelijke naam</strong> per pagina. Veel minder dan de 195 van EKO, maar het hoort nul te zijn.</li>
+      <li><strong>Elf tot negentien klikvlakken onder 24 px.</strong> Zelfde verhaal.</li>
+      <li><strong>Zes producten hebben "Waterdicht of Gore-Tex" als eigenschap</strong> — het voorbeeld uit de hulptekst van het CMS-veld, per ongeluk als waarde ingevuld. Dat verschijnt zo ook in het filter.</li>
+      <li><strong>Zeven van de 25 producten hebben geen fotogalerij</strong> en tonen dus één foto in plaats van meerdere.</li>
+      <li><strong>Eén blogartikel staat op concept in het CMS maar is wel zichtbaar</strong> op de site. Die twee moeten gelijklopen.</li>
+      <li><strong>Mijn productpagina is met 1.315 ms mijn traagste pagina</strong>, ongeveer even traag als die van EKO, omdat ze de gegevens achteraf ophaalt.</li>
+      <li><strong>Eentalig.</strong> Voor een winkel in Kontich zou een Franse versie een logische volgende stap zijn.</li>
+    </ul>
+  </section>
+
+  <!-- ============ CONCLUSIE ============ -->
+  <section>
+    <span class="chip">Conclusie</span>
+    <h2>Rust is de eigenlijke functie</h2>
+
+    <p>De bestaande site van EKO Motorwear is niet lelijk gebouwd — hij is <em>vol</em>. Alles wat ooit belangrijk werd gevonden, staat er nog, en niets is er ooit weer af gehaald: twee menu's in dezelfde kop, een megamenu van 690 links dat naar elke telefoon meegaat, vier accentkleuren die geen van alle uit het logo komen, en een prijs die net onder de schermrand valt.</p>
+
+    <p>Mijn site toont hetzelfde soort winkel met een derde van de onderdelen, één accentkleur, een kop van 96 pixels, en de koopknop op de plek waar je hem zoekt. Dat is geen kwestie van mooier vinden. Het is meetbaar: minder elementen om te tekenen, minder links om te doorlopen, minder klikvlakken die te klein zijn voor een duim, en geen enkele pagina die horizontaal schuift tussen 320 en 991 pixels.</p>
+
+    <p>Wat ik meeneem uit de site van EKO: de USP-balk bovenaan, het volledige kruimelpad (dat heb ik intussen overgenomen, tot op de artikelpagina), en de meertaligheid. Wat ik zou weglaten: alles wat er staat omdat het er nu eenmaal al stond.</p>
+  </section>
+
+</div>
