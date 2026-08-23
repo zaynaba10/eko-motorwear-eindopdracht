@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -45,6 +45,7 @@ function TabIcoon({
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const onder = Math.max(insets.bottom, 12);
 
   const verlanglijst = useVerlanglijst();
@@ -80,6 +81,13 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ focused }) => <TabIcoon naam="home-outline" focused={focused} />,
+        }}
+        listeners={{
+          /* Altijd terug naar de homepagina, vanaf elk scherm. */
+          tabPress: (e) => {
+            e.preventDefault();
+            router.navigate('/');
+          },
         }}
       />
       <Tabs.Screen

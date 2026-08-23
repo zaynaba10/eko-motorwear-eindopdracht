@@ -159,11 +159,13 @@ const styles = StyleSheet.create({
   tekstvak: {
     borderWidth: 1,
     borderColor: EkoColors.lightSteelBlue,
+    borderRadius: 16,
     minHeight: 130,
-    padding: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     fontFamily: EkoFonts.bodyRegular,
-    fontSize: 15,
-    lineHeight: 21,
+    fontSize: 16,
+    lineHeight: 22,
     color: EkoColors.primaryDark,
   },
   bijlageKnop: {
@@ -173,7 +175,8 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 1,
     borderColor: EkoColors.lightSteelBlue,
-    height: 48,
+    borderRadius: 16,
+    height: 52,
   },
   bijlageKnopTekst: {
     fontFamily: EkoFonts.bodyBold,
@@ -186,8 +189,9 @@ const styles = StyleSheet.create({
     gap: 10,
     borderWidth: 1,
     borderColor: EkoColors.lightSteelBlue,
-    paddingHorizontal: 14,
-    height: 48,
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    height: 52,
   },
   bijlageNaam: {
     flex: 1,
