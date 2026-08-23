@@ -48,7 +48,6 @@ export default function RootLayout() {
       {/* Geen navigatiebalk bovenaan: elk scherm tekent zijn eigen kop. */}
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
