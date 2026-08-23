@@ -132,6 +132,7 @@ export default function TabLayout() {
       <Tabs.Screen name="lijst/[slug]" options={{ href: null }} />
       <Tabs.Screen name="product/[id]" options={{ href: null }} />
       <Tabs.Screen name="zoeken/[term]" options={{ href: null }} />
+      <Tabs.Screen name="afrekenen" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -14,7 +14,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProductCardData } from '@/components/product-card';
 import { EkoColors, EkoFonts } from '@/constants/eko-theme';
-import { plaatsBestelling } from '@/lib/bestellingen';
 import { prijsKort } from '@/lib/format';
 import { staatOpVerlanglijst, useVerlanglijst, wisselVerlanglijst } from '@/lib/verlanglijst';
 import { fetchWebflowProducts } from '@/lib/webflow-products';
@@ -97,23 +96,8 @@ export default function WinkelmandScherm() {
       toon('Deze artikelen zijn alleen in de winkel verkrijgbaar');
       return;
     }
-    const bestelling = plaatsBestelling({
-      regels: online.map((r) => ({
-        productId: r.product.id,
-        naam: r.product.name,
-        merk: r.product.merk,
-        maat: r.maat,
-        aantal: r.aantal,
-        stukPrijs: r.product.priceEuro ?? 0,
-        imageUrl: r.product.imageUrl,
-      })),
-      subtotaal,
-      korting,
-      verzending,
-      totaal,
-    });
-    leegMand();
-    router.push(`/bestelling/${bestelling.nummer}`);
+    /* Eerst alles nakijken op het afreken-scherm; daar wordt de bestelling geplaatst. */
+    router.push('/afrekenen');
   }
 
   if (laden) {
@@ -236,7 +220,7 @@ export default function WinkelmandScherm() {
           </View>
 
           <Pressable style={styles.bestelKnop} onPress={bestellen}>
-            <Text style={styles.bestelTekst}>Bestellen</Text>
+            <Text style={styles.bestelTekst}>Afrekenen</Text>
           </Pressable>
 
           <Pressable style={styles.leegKnopKlein} onPress={leegMand}>
