@@ -48,8 +48,6 @@ export default function ProductScherm() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  /* Hoogte van de zwevende tabbalk + marge: de winkelmand-balk zweeft daarboven. */
-  const tabRuimte = 62 + Math.max(insets.bottom, 12) + 8;
   const { width: schermBreedte } = useWindowDimensions();
 
   const [producten, setProducten] = useState<ProductCardData[]>([]);
@@ -264,6 +262,26 @@ export default function ProductScherm() {
             </View>
           )}
 
+          {/* In winkelmand: gewoon in de pagina, zoals op de website. Na het
+              toevoegen verschijnt er een tweede knop richting winkelmand. */}
+          <View style={styles.mandRij}>
+            <Pressable
+              style={[styles.mandKnop, toegevoegd && styles.mandKnopKlaar]}
+              onPress={inWinkelmand}>
+              <Text style={styles.mandKnopTekst}>
+                {toegevoegd ? 'Toegevoegd ✓' : 'In winkelmand'}
+              </Text>
+            </Pressable>
+            {toegevoegd && (
+              <Pressable
+                style={styles.naarMandKnop}
+                accessibilityLabel="Naar winkelmand"
+                onPress={() => router.push('/winkelmand')}>
+                <Text style={styles.mandKnopTekst}>Naar winkelmand</Text>
+              </Pressable>
+            )}
+          </View>
+
           {/* Winkelvoorraad */}
           <Pressable style={styles.voorraadKnop} onPress={() => setVoorraadOpen((v) => !v)}>
             <Text style={styles.voorraadKnopTekst}>Bekijk winkelvoorraad</Text>
@@ -471,28 +489,6 @@ export default function ProductScherm() {
               color={favoriet ? EkoColors.primary : EkoColors.primaryDark}
             />
           </Pressable>
-        </View>
-      </View>
-
-      {/* Vaste In winkelmand-knop, zwevend boven de tabbalk. Na het toevoegen
-          verschijnt er meteen een tweede knop om naar de winkelmand te gaan. */}
-      <View style={[styles.mandBalk, { bottom: tabRuimte, paddingBottom: 12 }]}>
-        <View style={styles.mandRij}>
-          <Pressable
-            style={[styles.mandKnop, toegevoegd && styles.mandKnopKlaar]}
-            onPress={inWinkelmand}>
-            <Text style={styles.mandKnopTekst}>
-              {toegevoegd ? 'Toegevoegd ✓' : 'In winkelmand'}
-            </Text>
-          </Pressable>
-          {toegevoegd && (
-            <Pressable
-              style={styles.naarMandKnop}
-              accessibilityLabel="Naar winkelmand"
-              onPress={() => router.push('/winkelmand')}>
-              <Text style={styles.mandKnopTekst}>Naar winkelmand</Text>
-            </Pressable>
-          )}
         </View>
       </View>
 
@@ -952,35 +948,22 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 6,
   },
-  mandBalk: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    backgroundColor: EkoColors.white,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: EkoColors.lightSteelBlue,
-    shadowColor: EkoColors.primaryDark,
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: -4 },
-    elevation: 10,
-  },
   mandRij: {
     flexDirection: 'row',
     gap: 10,
+    marginTop: 18,
   },
   mandKnop: {
     flex: 1,
     backgroundColor: EkoColors.primary,
+    borderRadius: 999,
     paddingVertical: 15,
     alignItems: 'center',
   },
   naarMandKnop: {
     flex: 1,
     backgroundColor: EkoColors.primary,
+    borderRadius: 999,
     paddingVertical: 15,
     alignItems: 'center',
     justifyContent: 'center',
