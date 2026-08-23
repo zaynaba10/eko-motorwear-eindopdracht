@@ -32,7 +32,14 @@ Wat de app kan: shop in warenhuisstructuur (categorieën → subcategorieën →
 
 ## Stap 4 — Mini-game
 
-De mini-game (met score, timer en herstartfunctie) zit in de app onder `app/app/game.tsx` + `app/components/game/` + `app/lib/game/`, en demonstreer ik tijdens het mondeling examen.
+Mijn mini-game is een motorrit in EKO-stijl, bereikbaar in de app via de route `/game`. Je rijdt op een motor over een heuvelig parcours en wordt achternagezeten door een bende van drie motoren die elke tien seconden versnelt. Met de knoppen geef je gas, rem je en spring je over obstakels: een geslaagde sprong levert een bonus (en een korte snelheidsboost) op, een botsing kost punten en vaart.
+
+- **Score**: 1 punt per gereden meter, plus sprongbonussen, min de strafpunten van botsingen — live zichtbaar in de HUD.
+- **Timer**: één ronde duurt 60 seconden, de resterende tijd telt af in beeld.
+- **Winnen/verliezen**: blijf je de volle 60 seconden uit de handen van de bende, dan win je; halen ze je in, dan verlies je.
+- **Herstartfunctie**: het win- en verliesscherm heeft een herstartknop, dus je kan meteen opnieuw voor een hogere score gaan.
+
+Ook hier heb ik de code opgesplitst: het scherm `app/app/game.tsx` tekent alleen, alle spellogica (game loop, natuurkunde, score, timer, bende) zit in de hook `app/lib/game/useGameEngine.ts`, alle instelbare waarden staan in `app/lib/game/gameConfig.ts`, en de visuele onderdelen (Bike, Terrain, Obstacle, GameHUD, GameControls, GameOverlay, EkoLogo) zijn aparte componenten in `app/components/game/`. Niets wordt in een database opgeslagen; alles draait live in de app. Ik demonstreer de game tijdens het mondeling examen.
 
 ## Projectstructuur
 
